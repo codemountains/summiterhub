@@ -17,7 +17,7 @@ def upload_path(instance, filename):
 class UserManager(BaseUserManager):
 	def create_user(self, email, password=None):
 		if not email:
-			raise ValueError('Email is must')
+			raise ValueError('メールアドレスは必須です')
 
 		user = self.model(email=self.normalize_email(email))
 		user.set_password(password)
@@ -49,6 +49,10 @@ class User(AbstractBaseUser, PermissionsMixin):
 
 
 class UserDetail(models.Model):
+	PREFECTURE = choices.PREFECTURE
+	GENDER_TYPE = choices.GENDER_TYPE
+	BLOOD_TYPE = choices.BLOOD_TYPE
+
 	id = models.UUIDField(
 		primary_key=True,
 		default=uuid.uuid4,
@@ -66,10 +70,10 @@ class UserDetail(models.Model):
 	profile_image = models.ImageField(blank=True, null=True, upload_to=upload_path)
 	name = models.CharField(max_length=100)
 	postal_code = models.CharField(max_length=8)
-	prefecture = models.IntegerField(choices=choices.PREFECTURE)
+	prefecture = models.IntegerField(choices=PREFECTURE)
 	address = models.CharField(max_length=200)
-	gender_type = models.IntegerField(choices=choices.GENDER_TYPE)
-	blood_type = models.IntegerField(choices=choices.BLOOD_TYPE)
+	gender_type = models.IntegerField(choices=GENDER_TYPE)
+	blood_type = models.IntegerField(choices=BLOOD_TYPE)
 	home_phone_number = models.CharField(max_length=13, blank=True, null=True)
 	cell_phone_number = models.CharField(max_length=13, blank=True, null=True)
 	emergency_contact_name = models.CharField(max_length=100)
