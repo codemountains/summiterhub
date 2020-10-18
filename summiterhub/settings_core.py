@@ -32,8 +32,12 @@ INSTALLED_APPS = [
 	'rest_framework',
 	'djoser',
 	'corsheaders',
+	'django_cleanup.apps.CleanupConfig',
 	'api.apps.ApiConfig',
 	'users.apps.UsersConfig',
+	'gears.apps.GearsConfig',
+	'news.apps.NewsConfig',
+	'plans.apps.PlansConfig',
 ]
 
 MIDDLEWARE = [
