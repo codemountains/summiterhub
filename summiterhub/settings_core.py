@@ -33,7 +33,6 @@ INSTALLED_APPS = [
 	'djoser',
 	'corsheaders',
 	'django_cleanup.apps.CleanupConfig',
-	'api.apps.ApiConfig',
 	'users.apps.UsersConfig',
 	'gears.apps.GearsConfig',
 	'news.apps.NewsConfig',
