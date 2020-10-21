@@ -2,6 +2,7 @@ from rest_framework import serializers
 from django.contrib.auth import get_user_model
 from .models import UserDetail, Friend, FriendRequest, BlockingFriend, \
 	Party, PartyMember
+from utils.format import created_at, updated_at
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -32,14 +33,8 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class UserDetailSerializer(serializers.ModelSerializer):
-	created_at = serializers.DateTimeField(
-		format="%Y-%m-%d %H:%M",
-		read_only=True
-	)
-	updated_at = serializers.DateTimeField(
-		format="%Y-%m-%d %H:%M",
-		read_only=True
-	)
+	created_at = created_at()
+	updated_at = updated_at()
 	prefecture_name = serializers.CharField(
 		source='get_prefecture_display',
 		read_only=True
@@ -80,6 +75,106 @@ class UserDetailSerializer(serializers.ModelSerializer):
 			'insurance_name',
 			'insurance_number',
 			'hitococo_id',
+		]
+		extra_kwargs = {
+			'user_id': {'read_only': True}
+		}
+
+
+class FriendSerializer(serializers.ModelSerializer):
+	created_at = created_at()
+	updated_at = updated_at()
+
+	class Meta:
+		model = Friend
+		fields = [
+			'id',
+			'user_id',
+			'created_at',
+			'updated_at',
+			'is_active',
+			'approval_user_id'
+		]
+		# extra_kwargs = {
+		# 	'user_id': {'read_only': True}
+		# }
+
+
+class FriendRequestSerializer(serializers.ModelSerializer):
+	created_at = created_at()
+	updated_at = updated_at()
+
+	class Meta:
+		model = FriendRequest
+		fields = [
+			'id',
+			'src_user_id',
+			'dest_user_id',
+			'created_at',
+			'updated_at',
+			'is_active',
+			'message',
+			'is_approved'
+		]
+		extra_kwargs = {
+			'src_user_id': {'read_only': True}
+		}
+
+
+class BlockingFriendSerializer(serializers.ModelSerializer):
+	created_at = created_at()
+	updated_at = updated_at()
+
+	class Meta:
+		model = BlockingFriend
+		fields = [
+			'id',
+			'src_user_id',
+			'dest_user_id',
+			'created_at',
+			'updated_at',
+			'is_active'
+		]
+		# extra_kwargs = {
+		# 	'src_user_id': {'read_only': True}
+		# }
+
+
+class PartySerializer(serializers.ModelSerializer):
+	created_at = created_at()
+	updated_at = updated_at()
+
+	class Meta:
+		model = Party
+		fields = [
+			'id',
+			'user_id',
+			'created_at',
+			'updated_at',
+			'is_active',
+			'name',
+			'remarks'
+		]
+		extra_kwargs = {
+			'user_id': {'read_only': True}
+		}
+
+
+class PartyMemberSerializer(serializers.ModelSerializer):
+	created_at = created_at()
+	updated_at = updated_at()
+
+	class Meta:
+		model = PartyMember
+		fields = [
+			'id',
+			'user_id',
+			'created_at',
+			'updated_at',
+			'is_active',
+			'party_id',
+			'entry_user_id',
+			'sort_index'
 		]
 		extra_kwargs = {
 			'user_id': {'read_only': True}
