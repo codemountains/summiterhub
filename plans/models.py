@@ -2,10 +2,15 @@ from django.db import models
 from summiterhub import settings_core
 import uuid
 from utils import choices
-from gears.models import Gear
 
 
 class Plan(models.Model):
+	"""
+	登山計画モデル
+	"""
+	PURPOSE_TYPE = choices.PURPOSE_TYPE
+	PREFECTURE = choices.PREFECTURE
+
 	id = models.UUIDField(
 		primary_key=True,
 		default=uuid.uuid4,
@@ -23,8 +28,59 @@ class Plan(models.Model):
 		on_delete=models.CASCADE
 	)
 	updated_at = models.DateTimeField(auto_now=True)
-	is_active = models.BooleanField(default=True)
-	purpose_type = models.IntegerField(choices=choices.PURPOSE_TYPE)
+	purpose_type = models.IntegerField(choices=PURPOSE_TYPE)
+	prefecture = models.IntegerField(choices=PREFECTURE)
+	mountain_first = models.CharField(max_length=50)
+	mountain_second = models.CharField(max_length=50, blank=True, null=True)
+	mountain_third = models.CharField(max_length=50, blank=True, null=True)
+	mountain_fourth = models.CharField(max_length=50, blank=True, null=True)
+	mountain_fifth = models.CharField(max_length=50, blank=True, null=True)
+	is_submitted = models.BooleanField(default=False)
+	submitted_date = models.DateField(blank=True, null=True)
+	entering_date = models.DateField(blank=False, null=False)
+	descending_date = models.DateField(blank=False, null=False)
+	affiliate_group_name = models.CharField(max_length=100, blank=True, null=True)
+	affiliate_group_phone = models.CharField(max_length=13, blank=True, null=True)
+	has_trail_snacks = models.BooleanField(default=True)
+	water_liters = models.IntegerField()
+	food_times = models.IntegerField()
+	emergency_food_times = models.IntegerField()
+
+	def __str__(self):
+		return 'User: ' + str(self.created_user_id) + \
+			' Enter: ' + str(self.entering_date) + \
+			' Mountain: ' + self.mountain_first
+
+
+class PlanGear(models.Model):
+	"""
+	登山計画装備モデル
+	登山計画に対して装備を登録可能
+	"""
+	RIDING_TYPE = choices.RIDING_TYPE
+
+	id = models.UUIDField(
+		primary_key=True,
+		default=uuid.uuid4,
+		editable=False
+	)
+	created_user_id = models.ForeignKey(
+		settings_core.AUTH_USER_MODEL,
+		related_name='plan_gear_created_user_id',
+		on_delete=models.CASCADE
+	)
+	created_at = models.DateTimeField(auto_now_add=True)
+	updated_user_id = models.ForeignKey(
+		settings_core.AUTH_USER_MODEL,
+		related_name='plan_gear_updated_user_id',
+		on_delete=models.CASCADE
+	)
+	updated_at = models.DateTimeField(auto_now=True)
+	plan_id = models.OneToOneField(
+		Plan,
+		related_name='plan_gear_plan_id',
+		on_delete=models.CASCADE
+	)
 	has_rain_wear = models.BooleanField(default=True)
 	has_winter_clothing = models.BooleanField(default=True)
 	has_map = models.BooleanField(default=True)
@@ -50,13 +106,17 @@ class Plan(models.Model):
 	has_probe = models.BooleanField(default=False)
 	has_snow_saw = models.BooleanField(default=False)
 	has_riding_gear = models.BooleanField(default=False)
-	riding_type = models.IntegerField(choices=choices.RIDING_TYPE, blank=True, null=True)
+	riding_type = models.IntegerField(choices=RIDING_TYPE, blank=True, null=True)
 
 	def __str__(self):
-		return str(self.id)
+		return str(self.plan_id)
 
 
 class PlanCustomGear(models.Model):
+	"""
+	登山計画カスタム装備モデル
+	登山計画に対してカスタム装備を登録可能
+	"""
 	id = models.UUIDField(
 		primary_key=True,
 		default=uuid.uuid4,
@@ -64,61 +124,33 @@ class PlanCustomGear(models.Model):
 	)
 	created_user_id = models.ForeignKey(
 		settings_core.AUTH_USER_MODEL,
-		related_name='plan_customGear_created_user_id',
+		related_name='plan_custom_gear_created_user_id',
 		on_delete=models.CASCADE
 	)
 	created_at = models.DateTimeField(auto_now_add=True)
 	updated_user_id = models.ForeignKey(
 		settings_core.AUTH_USER_MODEL,
-		related_name='plan_customGear_updated_user_id',
+		related_name='plan_custom_gear_updated_user_id',
 		on_delete=models.CASCADE
 	)
 	updated_at = models.DateTimeField(auto_now=True)
-	is_active = models.BooleanField(default=True)
-	plan_id = models.ForeignKey(
-		Gear,
-		related_name='plan_customGear_gear_id',
-		on_delete=models.CASCADE
-	)
-	name = models.CharField(max_length=50)
-	sort_index = models.IntegerField()
-
-	def __str__(self):
-		return self.name
-
-
-class PlanMountain(models.Model):
-	id = models.UUIDField(
-		primary_key=True,
-		default=uuid.uuid4,
-		editable=False
-	)
-	created_user_id = models.ForeignKey(
-		settings_core.AUTH_USER_MODEL,
-		related_name='plan_mountain_created_user_id',
-		on_delete=models.CASCADE
-	)
-	created_at = models.DateTimeField(auto_now_add=True)
-	updated_user_id = models.ForeignKey(
-		settings_core.AUTH_USER_MODEL,
-		related_name='plan_mountain_updated_user_id',
-		on_delete=models.CASCADE
-	)
-	updated_at = models.DateTimeField(auto_now=True)
-	is_active = models.BooleanField(default=True)
 	plan_id = models.ForeignKey(
 		Plan,
-		related_name='plan_mountain_plan_id',
+		related_name='plan_custom_gear_plan_id',
 		on_delete=models.CASCADE
 	)
 	name = models.CharField(max_length=50)
 	sort_index = models.IntegerField()
 
 	def __str__(self):
-		return self.name
+		return str(self.plan_id) + ' Name: ' + str(self.name)
 
 
 class PlanRoute(models.Model):
+	"""
+	登山計画ルートモデル
+	登山計画に対してルートを登録可能
+	"""
 	id = models.UUIDField(
 		primary_key=True,
 		default=uuid.uuid4,
@@ -136,7 +168,6 @@ class PlanRoute(models.Model):
 		on_delete=models.CASCADE
 	)
 	updated_at = models.DateTimeField(auto_now=True)
-	is_active = models.BooleanField(default=True)
 	plan_id = models.ForeignKey(
 		Plan,
 		related_name='plan_route_plan_id',
@@ -145,10 +176,14 @@ class PlanRoute(models.Model):
 	plan_date = models.DateField()
 
 	def __str__(self):
-		return str(self.plan_date) + ' ' + str(self.plan_id)
+		return str(self.plan_id) + ' Date: ' + str(self.plan_date)
 
 
 class PlanRouteDetail(models.Model):
+	"""
+	登山計画ルート詳細モデル
+	登山計画ルートに対してルート詳細(経由地・宿泊地)を登録可能
+	"""
 	id = models.UUIDField(
 		primary_key=True,
 		default=uuid.uuid4,
@@ -166,7 +201,6 @@ class PlanRouteDetail(models.Model):
 		on_delete=models.CASCADE
 	)
 	updated_at = models.DateTimeField(auto_now=True)
-	is_active = models.BooleanField(default=True)
 	plan_route_id = models.ForeignKey(
 		PlanRoute,
 		related_name='plan_route_detail_plan_route_id',
@@ -177,10 +211,14 @@ class PlanRouteDetail(models.Model):
 	sort_index = models.IntegerField()
 
 	def __str__(self):
-		return self.name
+		return str(self.plan_route_id) + ' Name: ' + str(self.name)
 
 
 class PlanEscapeRoute(models.Model):
+	"""
+	登山計画エスケープルートモデル
+	登山計画に対してエスケープルートを登録可能
+	"""
 	id = models.UUIDField(
 		primary_key=True,
 		default=uuid.uuid4,
@@ -198,8 +236,7 @@ class PlanEscapeRoute(models.Model):
 		on_delete=models.CASCADE
 	)
 	updated_at = models.DateTimeField(auto_now=True)
-	is_active = models.BooleanField(default=True)
-	plan_id = models.ForeignKey(
+	plan_id = models.OneToOneField(
 		Plan,
 		related_name='plan_escape_route_plan_id',
 		on_delete=models.CASCADE
@@ -211,6 +248,14 @@ class PlanEscapeRoute(models.Model):
 
 
 class PlanMember(models.Model):
+	"""
+	登山計画メンバーモデル
+	登山計画に対してメンバーを登録可能
+	"""
+	PREFECTURE = choices.PREFECTURE
+	GENDER_TYPE = choices.GENDER_TYPE
+	BLOOD_TYPE = choices.BLOOD_TYPE
+
 	id = models.UUIDField(
 		primary_key=True,
 		default=uuid.uuid4,
@@ -228,7 +273,6 @@ class PlanMember(models.Model):
 		on_delete=models.CASCADE
 	)
 	updated_at = models.DateTimeField(auto_now=True)
-	is_active = models.BooleanField(default=True)
 	plan_id = models.ForeignKey(
 		Plan,
 		related_name='plan_member_plan_id',
@@ -243,24 +287,28 @@ class PlanMember(models.Model):
 	)
 	name = models.CharField(max_length=100)
 	postal_code = models.CharField(max_length=8)
-	prefecture = models.IntegerField(choices=choices.PREFECTURE)
+	prefecture = models.IntegerField(choices=PREFECTURE)
 	address = models.CharField(max_length=200)
-	gender_type = models.IntegerField(choices=choices.GENDER_TYPE)
-	blood_type = models.IntegerField(choices=choices.BLOOD_TYPE)
+	gender_type = models.IntegerField(choices=GENDER_TYPE)
+	blood_type = models.IntegerField(choices=BLOOD_TYPE)
 	home_phone_number = models.CharField(max_length=13, blank=True, null=True)
 	cell_phone_number = models.CharField(max_length=13, blank=True, null=True)
 	emergency_contact_name = models.CharField(max_length=100)
 	emergency_contact_phone = models.CharField(max_length=13)
-	emergency_contact_email = models.CharField(max_length=100, blank=True, null=True)
+	emergency_contact_email = models.CharField(
+		max_length=100, blank=True, null=True)
 	insurance_name = models.CharField(max_length=100, blank=True, null=True)
 	insurance_number = models.CharField(max_length=100, blank=True, null=True)
 	hitococo_id = models.CharField(max_length=50, blank=True, null=True)
 
 	def __str__(self):
-		return self.name
+		return str(self.plan_id) + ' Name: ' + str(self.name)
 
 
 class Bookmark(models.Model):
+	"""
+	ブックマークモデル
+	"""
 	id = models.UUIDField(
 		primary_key=True,
 		default=uuid.uuid4,
@@ -273,12 +321,14 @@ class Bookmark(models.Model):
 	)
 	created_at = models.DateTimeField(auto_now_add=True)
 	updated_at = models.DateTimeField(auto_now=True)
-	is_active = models.BooleanField(default=True)
 	plan_id = models.ForeignKey(
 		Plan,
 		related_name='bookmark_plan_id',
 		on_delete=models.CASCADE
 	)
 
+	class Meta:
+		unique_together = (('user_id', 'plan_id'),)
+
 	def __str__(self):
-		return str(self.plan_id)
+		return str(self.plan_id) + ' User: ' + str(self.user_id)
