@@ -15,6 +15,9 @@ def upload_path(instance, filename):
 
 
 class UserManager(BaseUserManager):
+	"""
+	ユーザマネージャー
+	"""
 	def create_user(self, email, password=None):
 		if not email:
 			raise ValueError('メールアドレスは必須です')
@@ -35,6 +38,9 @@ class UserManager(BaseUserManager):
 
 
 class User(AbstractBaseUser, PermissionsMixin):
+	"""
+	ユーザモデル
+	"""
 	id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
 	email = models.EmailField(unique=True)
 	is_active = models.BooleanField(default=True)
@@ -49,6 +55,9 @@ class User(AbstractBaseUser, PermissionsMixin):
 
 
 class UserDetail(models.Model):
+	"""
+	ユーザ詳細モデル
+	"""
 	PREFECTURE = choices.PREFECTURE
 	GENDER_TYPE = choices.GENDER_TYPE
 	BLOOD_TYPE = choices.BLOOD_TYPE
@@ -65,7 +74,6 @@ class UserDetail(models.Model):
 	)
 	created_at = models.DateTimeField(auto_now_add=True)
 	updated_at = models.DateTimeField(auto_now=True)
-	is_active = models.BooleanField(default=True)
 	profile_name = models.CharField(max_length=100)
 	profile_image = models.ImageField(blank=True, null=True, upload_to=upload_path)
 	name = models.CharField(max_length=100)
@@ -78,40 +86,22 @@ class UserDetail(models.Model):
 	cell_phone_number = models.CharField(max_length=13, blank=True, null=True)
 	emergency_contact_name = models.CharField(max_length=100)
 	emergency_contact_phone = models.CharField(max_length=13)
-	emergency_contact_email = models.CharField(max_length=100, blank=True, null=True)
+	emergency_contact_email = models.CharField(
+		max_length=100, blank=True, null=True)
 	insurance_name = models.CharField(max_length=100, blank=True, null=True)
 	insurance_number = models.CharField(max_length=100, blank=True, null=True)
 	hitococo_id = models.CharField(max_length=50, blank=True, null=True)
 
 	def __str__(self):
-		return self.profile_name
-
-
-class Friend(models.Model):
-	id = models.UUIDField(
-		primary_key=True,
-		default=uuid.uuid4,
-		editable=False
-	)
-	user_id = models.ForeignKey(
-		settings_core.AUTH_USER_MODEL,
-		related_name='friend_user_id',
-		on_delete=models.CASCADE
-	)
-	created_at = models.DateTimeField(auto_now_add=True)
-	updated_at = models.DateTimeField(auto_now=True)
-	is_active = models.BooleanField(default=True)
-	approval_user_id = models.ForeignKey(
-		settings_core.AUTH_USER_MODEL,
-		related_name='friend_approval_user_id',
-		on_delete=models.CASCADE
-	)
-
-	def __str__(self):
-		return str(self.user_id) + ' & ' + str(self.approval_user_id)
+		return str(self.user_id)
 
 
 class FriendRequest(models.Model):
+	"""
+	フレンド申請モデル
+	"""
+	STATUS_TYPE = choices.FRIEND_STATUS_TYPE
+
 	id = models.UUIDField(
 		primary_key=True,
 		default=uuid.uuid4,
@@ -122,25 +112,68 @@ class FriendRequest(models.Model):
 		related_name='friend_request_src_user_id',
 		on_delete=models.CASCADE
 	)
+	dest_email = models.EmailField()
 	dest_user_id = models.ForeignKey(
 		settings_core.AUTH_USER_MODEL,
 		related_name='friend_request_dest_user_id',
+		on_delete=models.CASCADE,
+		blank=True,
+		null=True
+	)
+	created_at = models.DateTimeField(auto_now_add=True)
+	updated_at = models.DateTimeField(auto_now=True)
+	message = models.TextField()
+	status_type = models.IntegerField(choices=STATUS_TYPE)
+
+	class Meta:
+		unique_together = (('src_user_id', 'dest_email'),)
+
+	def __str__(self):
+		src_user_id = str(self.src_user_id)
+		dest_email = str(self.dest_email)
+		status_type_name = str(choices.FRIEND_STATUS_TYPE[self.status_type - 1][1])
+		return 'Src: ' + src_user_id + ' Dest email: ' + dest_email + \
+			' Status: ' + status_type_name
+
+
+class Friend(models.Model):
+	"""
+	フレンドモデル
+	"""
+	id = models.UUIDField(
+		primary_key=True,
+		default=uuid.uuid4,
+		editable=False
+	)
+	src_user_id = models.ForeignKey(
+		settings_core.AUTH_USER_MODEL,
+		related_name='friend_src_user_id',
+		on_delete=models.CASCADE
+	)
+	dest_user_id = models.ForeignKey(
+		settings_core.AUTH_USER_MODEL,
+		related_name='friend_dest_user_id',
 		on_delete=models.CASCADE
 	)
 	created_at = models.DateTimeField(auto_now_add=True)
 	updated_at = models.DateTimeField(auto_now=True)
-	is_active = models.BooleanField(default=True)
-	message = models.TextField()
-	is_approved = models.BooleanField(default=False)
+	friend_request_id = models.ForeignKey(
+		FriendRequest,
+		related_name='friend_friend_request_id',
+		on_delete=models.CASCADE
+	)
 
 	class Meta:
 		unique_together = (('src_user_id', 'dest_user_id'),)
 
 	def __str__(self):
-		return str(self.src_user_id) + ' -> ' + str(self.dest_user_id)
+		return 'Src: ' + str(self.src_user_id) + ' Dest: ' + str(self.dest_user_id)
 
 
 class BlockingFriend(models.Model):
+	"""
+	ブロックフレンドモデル
+	"""
 	id = models.UUIDField(
 		primary_key=True,
 		default=uuid.uuid4,
@@ -158,16 +191,18 @@ class BlockingFriend(models.Model):
 	)
 	created_at = models.DateTimeField(auto_now_add=True)
 	updated_at = models.DateTimeField(auto_now=True)
-	is_active = models.BooleanField(default=True)
 
 	class Meta:
 		unique_together = (('src_user_id', 'dest_user_id'),)
 
 	def __str__(self):
-		return str(self.src_user_id) + ' -> ' + str(self.dest_user_id)
+		return 'Src: ' + str(self.src_user_id) + ' Dest: ' + str(self.dest_user_id)
 
 
 class Party(models.Model):
+	"""
+	パーティモデル
+	"""
 	id = models.UUIDField(
 		primary_key=True,
 		default=uuid.uuid4,
@@ -180,7 +215,6 @@ class Party(models.Model):
 	)
 	created_at = models.DateTimeField(auto_now_add=True)
 	updated_at = models.DateTimeField(auto_now=True)
-	is_active = models.BooleanField(default=True)
 	name = models.CharField(max_length=50)
 	remarks = models.CharField(max_length=100, blank=True, null=True)
 
@@ -188,10 +222,13 @@ class Party(models.Model):
 		verbose_name_plural = 'Parties'
 
 	def __str__(self):
-		return self.name
+		return 'User: ' + str(self.user_id) + ' Name: ' + self.name
 
 
 class PartyMember(models.Model):
+	"""
+	パーティメンバーモデル
+	"""
 	id = models.UUIDField(
 		primary_key=True,
 		default=uuid.uuid4,
@@ -204,7 +241,6 @@ class PartyMember(models.Model):
 	)
 	created_at = models.DateTimeField(auto_now_add=True)
 	updated_at = models.DateTimeField(auto_now=True)
-	is_active = models.BooleanField(default=True)
 	party_id = models.ForeignKey(
 		Party,
 		related_name='party_member_party_id',
@@ -218,4 +254,4 @@ class PartyMember(models.Model):
 	sort_index = models.IntegerField()
 
 	def __str__(self):
-		return str(self.entry_user_id) + '(' + str(self.party_id) + ')'
+		return str(self.party_id) + ' Entry: ' + str(self.entry_user_id)

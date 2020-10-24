@@ -5,6 +5,12 @@ from utils import choices
 
 
 class Gear(models.Model):
+	"""
+	装備モデル
+	"""
+	PURPOSE_TYPE = choices.PURPOSE_TYPE
+	RIDING_TYPE = choices.RIDING_TYPE
+
 	id = models.UUIDField(
 		primary_key=True,
 		default=uuid.uuid4,
@@ -17,9 +23,8 @@ class Gear(models.Model):
 	)
 	created_at = models.DateTimeField(auto_now_add=True)
 	updated_at = models.DateTimeField(auto_now=True)
-	is_active = models.BooleanField(default=True)
 	title = models.CharField(max_length=50)
-	purpose_type = models.IntegerField(choices=choices.PURPOSE_TYPE)
+	purpose_type = models.IntegerField(choices=PURPOSE_TYPE)
 	remarks = models.CharField(max_length=100, blank=True, null=True)
 	has_rain_wear = models.BooleanField(default=True)
 	has_winter_clothing = models.BooleanField(default=True)
@@ -46,13 +51,17 @@ class Gear(models.Model):
 	has_probe = models.BooleanField(default=False)
 	has_snow_saw = models.BooleanField(default=False)
 	has_riding_gear = models.BooleanField(default=False)
-	riding_type = models.IntegerField(choices=choices.RIDING_TYPE, blank=True, null=True)
+	riding_type = models.IntegerField(choices=RIDING_TYPE, blank=True, null=True)
 
 	def __str__(self):
-		return self.title
+		return 'User: ' + str(self.user_id) + ' Title: ' + self.title
 
 
 class CustomGear(models.Model):
+	"""
+	カスタム装備モデル
+	装備に対してカスタムの装備を追加可能
+	"""
 	id = models.UUIDField(
 		primary_key=True,
 		default=uuid.uuid4,
@@ -65,7 +74,6 @@ class CustomGear(models.Model):
 	)
 	created_at = models.DateTimeField(auto_now_add=True)
 	updated_at = models.DateTimeField(auto_now=True)
-	is_active = models.BooleanField(default=True)
 	gear_id = models.ForeignKey(
 		Gear,
 		related_name='custom_gear_gear_id',
@@ -75,4 +83,4 @@ class CustomGear(models.Model):
 	sort_index = models.IntegerField()
 
 	def __str__(self):
-		return self.name + '(' + str(self.gear_id) + ')'
+		return 'GearId: ' + str(self.gear_id_id) + ' Name: ' + self.name
