@@ -53,7 +53,7 @@ class UserDetailViewSet(viewsets.ModelViewSet):
 		try:
 			serializer.save(user_id=self.request.user)
 		except BaseException:
-			raise ValidationError('You\'ve already created your detail.')
+			raise ValidationError('すでにユーザ詳細を作成済みです')
 
 
 class FriendViewSet(viewsets.ModelViewSet):
@@ -65,9 +65,7 @@ class FriendViewSet(viewsets.ModelViewSet):
 
 	def get_queryset(self):
 		return self.queryset.filter(
-			Q(src_user_id=self.request.user)
-			&
-			Q(dest_user_id=self.request.user)
+			Q(src_user_id=self.request.user) | Q(dest_user_id=self.request.user)
 		)
 
 	def perform_create(self, serializer):
@@ -105,21 +103,32 @@ class FriendRequestViewSet(viewsets.ModelViewSet):
 
 	def get_queryset(self):
 		return self.queryset.filter(
-			(Q(src_user_id=self.request.user) | Q(dest_user_id=self.request.user))
+			Q(src_user_id=self.request.user)
+			|
+			(Q(dest_user_id=self.request.user) | Q(
+				dest_email=self.request.user.email))
 		)
 
 	def perform_create(self, serializer):
+		data_dest_email = serializer.validated_data.get('dest_email')
+		user = User.objects.filter(email=data_dest_email).first()
+
+		if user == self.request.user:
+			raise ValidationError('自分にフレンド申請はできません')
+
 		try:
-			data_dest_email = serializer.validated_data.get('dest_email')
-			user = User.objects.filter(email=data_dest_email).first()
 			serializer.save(src_user_id=self.request.user, dest_user_id=user)
 		except BaseException:
 			raise ValidationError('すでにフレンド申請済みです')
 
 	def perform_update(self, serializer):
 		friend_request = self.queryset.filter(id=self.kwargs.get('pk')).first()
-		if friend_request.dest_user_id != self.request.user:
-			raise ValidationError('申請されたリクエストのみ承認または拒否できます')
+		dest_user_id = friend_request.dest_user_id
+
+		if dest_user_id is not None:
+			if dest_user_id != self.request.user:
+				raise ValidationError('申請されたリクエストのみ承認または拒否できます')
+
 		serializer.save()
 
 
@@ -137,7 +146,7 @@ class BlockingFriendViewSet(viewsets.ModelViewSet):
 		try:
 			serializer.save(src_user_id=self.request.user)
 		except BaseException:
-			raise ValidationError('You are already blocking the user.')
+			raise ValidationError('すでにブロック済みです')
 
 
 class PartyViewSet(viewsets.ModelViewSet):
