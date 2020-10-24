@@ -12,6 +12,9 @@ def upload_path(instance, filename):
 
 
 class News(models.Model):
+	"""
+	ニュースモデル
+	"""
 	id = models.UUIDField(
 		primary_key=True,
 		default=uuid.uuid4,
@@ -19,7 +22,6 @@ class News(models.Model):
 	)
 	created_at = models.DateTimeField(auto_now_add=True)
 	updated_at = models.DateTimeField(auto_now=True)
-	is_active = models.BooleanField(default=True)
 	title = models.CharField(max_length=100)
 	content = models.TextField()
 	attached_image = models.ImageField(blank=True, null=True, upload_to=upload_path)
@@ -28,10 +30,13 @@ class News(models.Model):
 		verbose_name_plural = 'News'
 
 	def __str__(self):
-		return self.title
+		return 'Id: ' + str(self.id) + ' Title: ' + self.title
 
 
 class ReadNews(models.Model):
+	"""
+	既読ニュース
+	"""
 	id = models.UUIDField(
 		primary_key=True,
 		default=uuid.uuid4,
@@ -44,7 +49,6 @@ class ReadNews(models.Model):
 	)
 	created_at = models.DateTimeField(auto_now_add=True)
 	updated_at = models.DateTimeField(auto_now=True)
-	is_active = models.BooleanField(default=True)
 	news_id = models.ForeignKey(
 		News,
 		related_name='read_news_news_id',
@@ -53,6 +57,7 @@ class ReadNews(models.Model):
 
 	class Meta:
 		verbose_name_plural = 'ReadNews'
+		unique_together = (('user_id', 'news_id'),)
 
 	def __str__(self):
-		return str(self.news_id) + '(' + str(self.user_id) + ')'
+		return 'NewsId: ' + str(self.news_id_id) + ' User: ' + str(self.user_id)
