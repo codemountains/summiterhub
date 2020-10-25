@@ -1,12 +1,15 @@
 from django.db.models import Q
-from rest_framework import status, generics, viewsets
+from rest_framework import status, viewsets
+from rest_framework.permissions import AllowAny
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from .serializers import PlanSerializer, PlanGearSerializer, \
 	PlanCustomGearSerializer, PlanRouteSerializer, PlanRouteDetailSerializer, \
-	PlanEscapeRouteSerializer, PlanMemberSerializer, BookmarkSerializer
+	PlanEscapeRouteSerializer, PlanMemberSerializer, BookmarkSerializer, \
+	PlanSearchSerializer
 from .models import Plan, PlanGear, PlanCustomGear, PlanRoute, \
 	PlanRouteDetail, PlanEscapeRoute, PlanMember, Bookmark
+from .filters import PlanSearchFilter
 
 
 class PlanViewSet(viewsets.ModelViewSet):
@@ -15,20 +18,34 @@ class PlanViewSet(viewsets.ModelViewSet):
 	"""
 	serializer_class = PlanSerializer
 	queryset = Plan.objects.all()
+	filter_class = PlanSearchFilter
 
 	def get_queryset(self):
-		return self.queryset.filter(created_user_id=self.request.user)
+		param_mountain = self.request.query_params.get('mountain')
+
+		if param_mountain is None:
+			return self.queryset.filter(created_user_id=self.request.user)
+
+		return self.queryset.filter(
+			(
+					Q(mountain_first__contains=param_mountain)
+					| Q(mountain_second__contains=param_mountain)
+					| Q(mountain_third__contains=param_mountain)
+					| Q(mountain_fourth__contains=param_mountain)
+					| Q(mountain_fifth__contains=param_mountain)
+			)
+			&
+			Q(created_user_id=self.request.user)
+		)
 
 	def perform_create(self, serializer):
-		serializer.save(created_user_id=self.request.user, updated_user_id=self.request.user)
+		serializer.save(
+			created_user_id=self.request.user,
+			updated_user_id=self.request.user
+		)
 
 	def perform_update(self, serializer):
 		serializer.save(updated_user_id=self.request.user)
-
-	# def perform_destroy(self, instance):
-	# 	instance.is_active = False
-	# 	instance.updated_user_id = self.request.user
-	# 	instance.save()
 
 
 class PlanGearViewSet(viewsets.ModelViewSet):
@@ -42,7 +59,10 @@ class PlanGearViewSet(viewsets.ModelViewSet):
 		return self.queryset.filter(plan_id_id=self.kwargs.get('plan_id'))
 
 	def perform_create(self, serializer):
-		serializer.save(created_user_id=self.request.user, updated_user_id=self.request.user)
+		serializer.save(
+			created_user_id=self.request.user,
+			updated_user_id=self.request.user
+		)
 
 	def perform_update(self, serializer):
 		serializer.save(updated_user_id=self.request.user)
@@ -59,7 +79,10 @@ class PlanCustomGearViewSet(viewsets.ModelViewSet):
 		return self.queryset.filter(plan_id_id=self.kwargs.get('plan_id'))
 
 	def perform_create(self, serializer):
-		serializer.save(created_user_id=self.request.user, updated_user_id=self.request.user)
+		serializer.save(
+			created_user_id=self.request.user,
+			updated_user_id=self.request.user
+		)
 
 	def perform_update(self, serializer):
 		serializer.save(updated_user_id=self.request.user)
@@ -76,7 +99,10 @@ class PlanRouteViewSet(viewsets.ModelViewSet):
 		return self.queryset.filter(plan_id_id=self.kwargs.get('plan_id'))
 
 	def perform_create(self, serializer):
-		serializer.save(created_user_id=self.request.user, updated_user_id=self.request.user)
+		serializer.save(
+			created_user_id=self.request.user,
+			updated_user_id=self.request.user
+		)
 
 	def perform_update(self, serializer):
 		serializer.save(updated_user_id=self.request.user)
@@ -90,10 +116,14 @@ class PlanRouteDetailViewSet(viewsets.ModelViewSet):
 	queryset = PlanRouteDetail.objects.all()
 
 	def get_queryset(self):
-		return self.queryset.filter(plan_route_id_id=self.kwargs.get('plan_route_id'))
+		return self.queryset.filter(
+			plan_route_id_id=self.kwargs.get('plan_route_id'))
 
 	def perform_create(self, serializer):
-		serializer.save(created_user_id=self.request.user, updated_user_id=self.request.user)
+		serializer.save(
+			created_user_id=self.request.user,
+			updated_user_id=self.request.user
+		)
 
 	def perform_update(self, serializer):
 		serializer.save(updated_user_id=self.request.user)
@@ -110,7 +140,30 @@ class PlanEscapeRouteViewSet(viewsets.ModelViewSet):
 		return self.queryset.filter(plan_id_id=self.kwargs.get('plan_id'))
 
 	def perform_create(self, serializer):
-		serializer.save(created_user_id=self.request.user, updated_user_id=self.request.user)
+		serializer.save(
+			created_user_id=self.request.user,
+			updated_user_id=self.request.user
+		)
+
+	def perform_update(self, serializer):
+		serializer.save(updated_user_id=self.request.user)
+
+
+class PlanMemberViewSet(viewsets.ModelViewSet):
+	"""
+	登山計画メンバー ModelViewSet
+	"""
+	serializer_class = PlanMemberSerializer
+	queryset = PlanMember.objects.all()
+
+	def get_queryset(self):
+		return self.queryset.filter(plan_id_id=self.kwargs.get('plan_id'))
+
+	def perform_create(self, serializer):
+		serializer.save(
+			created_user_id=self.request.user,
+			updated_user_id=self.request.user
+		)
 
 	def perform_update(self, serializer):
 		serializer.save(updated_user_id=self.request.user)
@@ -130,7 +183,7 @@ class BookmarkViewSet(viewsets.ModelViewSet):
 		try:
 			serializer.save(user_id=self.request.user)
 		except BaseException:
-			raise ValidationError('You\'ve already bookmarked this plan.')
+			raise ValidationError('この計画はブックマーク済みです')
 
 	def update(self, request, *args, **kwargs):
 		response = {'message': 'PUT method is not allowed.'}
@@ -139,3 +192,32 @@ class BookmarkViewSet(viewsets.ModelViewSet):
 	def partial_update(self, request, *args, **kwargs):
 		response = {'message': 'PATCH method is not allowed.'}
 		return Response(response, status=status.HTTP_400_BAD_REQUEST)
+
+
+class PlanSearchViewSet(viewsets.ReadOnlyModelViewSet):
+	"""
+	登山計画検索 ReadOnlyModelViewSet
+	提出済みの計画のみ抽出可能
+	"""
+	serializer_class = PlanSearchSerializer
+	queryset = Plan.objects.all()
+	permission_classes = (AllowAny,)
+	filter_class = PlanSearchFilter
+
+	def get_queryset(self):
+		param_mountain = self.request.query_params.get('mountain')
+
+		if param_mountain is None:
+			return self.queryset.filter(is_submitted=True)
+
+		return self.queryset.filter(
+			(
+					Q(mountain_first__contains=param_mountain)
+					| Q(mountain_second__contains=param_mountain)
+					| Q(mountain_third__contains=param_mountain)
+					| Q(mountain_fourth__contains=param_mountain)
+					| Q(mountain_fifth__contains=param_mountain)
+			)
+			&
+			Q(is_submitted=True)
+		)

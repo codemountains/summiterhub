@@ -33,6 +33,7 @@ INSTALLED_APPS = [
 	'djoser',
 	'corsheaders',
 	'django_cleanup.apps.CleanupConfig',
+	'django_filters',
 	'users.apps.UsersConfig',
 	'gears.apps.GearsConfig',
 	'news.apps.NewsConfig',
@@ -76,6 +77,9 @@ REST_FRAMEWORK = {
 	],
 	'DEFAULT_AUTHENTICATION_CLASSES': [
 		'rest_framework_simplejwt.authentication.JWTAuthentication',
+	],
+	'DEFAULT_FILTER_BACKENDS': [
+		'django_filters.rest_framework.DjangoFilterBackend'
 	],
 }
 
@@ -129,4 +133,5 @@ STATIC_URL = '/static/'
 # Media
 
 MEDIA_ROOT = Path(BASE_DIR, 'media')
+
 MEDIA_URL = '/media/'
