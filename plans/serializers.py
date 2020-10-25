@@ -278,3 +278,34 @@ class BookmarkSerializer(serializers.ModelSerializer):
 		extra_kwargs = {
 			'user_id': {'read_only': True}
 		}
+
+
+class PlanSearchSerializer(serializers.ModelSerializer):
+	"""
+	登山計画検索シリアライザ
+	"""
+	purpose_type_name = serializers.CharField(
+		source='get_purpose_type_display',
+		read_only=True
+	)
+	prefecture_name = serializers.CharField(
+		source='get_prefecture_display',
+		read_only=True
+	)
+
+	class Meta:
+		model = Plan
+		fields = [
+			'id',
+			'purpose_type',
+			'purpose_type_name',
+			'prefecture',
+			'prefecture_name',
+			'mountain_first',
+			'mountain_second',
+			'mountain_third',
+			'mountain_fourth',
+			'mountain_fifth',
+			'entering_date',
+			'descending_date'
+		]
