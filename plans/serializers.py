@@ -23,9 +23,9 @@ class PlanSerializer(serializers.ModelSerializer):
 		model = Plan
 		fields = [
 			'id',
-			'created_user_id',
+			'created_user',
 			'created_at',
-			'updated_user_id',
+			'updated_user',
 			'updated_at',
 			'purpose_type',
 			'purpose_type_name',
@@ -48,8 +48,8 @@ class PlanSerializer(serializers.ModelSerializer):
 			'emergency_food_times'
 		]
 		extra_kwargs = {
-			'created_user_id': {'read_only': True},
-			'updated_user_id': {'read_only': True}
+			'created_user': {'read_only': True},
+			'updated_user': {'read_only': True}
 		}
 
 
@@ -68,11 +68,11 @@ class PlanGearSerializer(serializers.ModelSerializer):
 		model = PlanGear
 		fields = [
 			'id',
-			'created_user_id',
+			'created_user',
 			'created_at',
-			'updated_user_id',
+			'updated_user',
 			'updated_at',
-			'plan_id',
+			'plan',
 			'has_rain_wear',
 			'has_winter_clothing',
 			'has_map',
@@ -102,8 +102,8 @@ class PlanGearSerializer(serializers.ModelSerializer):
 			'riding_type_name'
 		]
 		extra_kwargs = {
-			'created_user_id': {'read_only': True},
-			'updated_user_id': {'read_only': True}
+			'created_user': {'read_only': True},
+			'updated_user': {'read_only': True}
 		}
 
 
@@ -118,17 +118,17 @@ class PlanCustomGearSerializer(serializers.ModelSerializer):
 		model = PlanCustomGear
 		fields = [
 			'id',
-			'created_user_id',
+			'created_user',
 			'created_at',
-			'updated_user_id',
+			'updated_user',
 			'updated_at',
-			'plan_id',
+			'plan',
 			'name',
 			'sort_index'
 		]
 		extra_kwargs = {
-			'created_user_id': {'read_only': True},
-			'updated_user_id': {'read_only': True}
+			'created_user': {'read_only': True},
+			'updated_user': {'read_only': True}
 		}
 
 
@@ -143,16 +143,16 @@ class PlanRouteSerializer(serializers.ModelSerializer):
 		model = PlanRoute
 		fields = [
 			'id',
-			'created_user_id',
+			'created_user',
 			'created_at',
-			'updated_user_id',
+			'updated_user',
 			'updated_at',
-			'plan_id',
+			'plan',
 			'plan_date'
 		]
 		extra_kwargs = {
-			'created_user_id': {'read_only': True},
-			'updated_user_id': {'read_only': True}
+			'created_user': {'read_only': True},
+			'updated_user': {'read_only': True}
 		}
 
 
@@ -167,18 +167,18 @@ class PlanRouteDetailSerializer(serializers.ModelSerializer):
 		model = PlanRouteDetail
 		fields = [
 			'id',
-			'created_user_id',
+			'created_user',
 			'created_at',
-			'updated_user_id',
+			'updated_user',
 			'updated_at',
-			'plan_route_id',
+			'plan_route',
 			'name',
 			'is_staying',
 			'sort_index'
 		]
 		extra_kwargs = {
-			'created_user_id': {'read_only': True},
-			'updated_user_id': {'read_only': True}
+			'created_user': {'read_only': True},
+			'updated_user': {'read_only': True}
 		}
 
 
@@ -193,16 +193,16 @@ class PlanEscapeRouteSerializer(serializers.ModelSerializer):
 		model = PlanEscapeRoute
 		fields = [
 			'id',
-			'created_user_id',
+			'created_user',
 			'created_at',
-			'updated_user_id',
+			'updated_user',
 			'updated_at',
-			'plan_id',
+			'plan',
 			'content'
 		]
 		extra_kwargs = {
-			'created_user_id': {'read_only': True},
-			'updated_user_id': {'read_only': True}
+			'created_user': {'read_only': True},
+			'updated_user': {'read_only': True}
 		}
 
 
@@ -229,12 +229,12 @@ class PlanMemberSerializer(serializers.ModelSerializer):
 		model = PlanMember
 		fields = [
 			'id',
-			'created_user_id',
+			'created_user',
 			'created_at',
-			'updated_user_id',
+			'updated_user',
 			'updated_at',
-			'plan_id',
-			'user_id',
+			'plan',
+			'user',
 			'name',
 			'postal_code',
 			'prefecture',
@@ -254,8 +254,8 @@ class PlanMemberSerializer(serializers.ModelSerializer):
 			'hitococo_id',
 		]
 		extra_kwargs = {
-			'created_user_id': {'read_only': True},
-			'updated_user_id': {'read_only': True}
+			'created_user': {'read_only': True},
+			'updated_user': {'read_only': True}
 		}
 
 
@@ -270,13 +270,13 @@ class BookmarkSerializer(serializers.ModelSerializer):
 		model = Bookmark
 		fields = [
 			'id',
-			'user_id',
+			'user',
 			'created_at',
 			'updated_at',
-			'plan_id',
+			'plan',
 		]
 		extra_kwargs = {
-			'user_id': {'read_only': True}
+			'user': {'read_only': True}
 		}
 
 

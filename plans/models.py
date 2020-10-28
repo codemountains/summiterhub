@@ -16,15 +16,15 @@ class Plan(models.Model):
 		default=uuid.uuid4,
 		editable=False
 	)
-	created_user_id = models.ForeignKey(
+	created_user = models.ForeignKey(
 		settings_core.AUTH_USER_MODEL,
-		related_name='plan_created_user_id',
+		related_name='plan_created_user',
 		on_delete=models.CASCADE
 	)
 	created_at = models.DateTimeField(auto_now_add=True)
-	updated_user_id = models.ForeignKey(
+	updated_user = models.ForeignKey(
 		settings_core.AUTH_USER_MODEL,
-		related_name='plan_updated_user_id',
+		related_name='plan_updated_user',
 		on_delete=models.CASCADE
 	)
 	updated_at = models.DateTimeField(auto_now=True)
@@ -47,7 +47,7 @@ class Plan(models.Model):
 	emergency_food_times = models.IntegerField()
 
 	def __str__(self):
-		return 'User: ' + str(self.created_user_id) + \
+		return 'User: ' + str(self.created_user) + \
 			' Enter: ' + str(self.entering_date) + \
 			' Mountain: ' + self.mountain_first
 
@@ -64,21 +64,21 @@ class PlanGear(models.Model):
 		default=uuid.uuid4,
 		editable=False
 	)
-	created_user_id = models.ForeignKey(
+	created_user = models.ForeignKey(
 		settings_core.AUTH_USER_MODEL,
-		related_name='plan_gear_created_user_id',
+		related_name='plan_gear_created_user',
 		on_delete=models.CASCADE
 	)
 	created_at = models.DateTimeField(auto_now_add=True)
-	updated_user_id = models.ForeignKey(
+	updated_user = models.ForeignKey(
 		settings_core.AUTH_USER_MODEL,
-		related_name='plan_gear_updated_user_id',
+		related_name='plan_gear_updated_user',
 		on_delete=models.CASCADE
 	)
 	updated_at = models.DateTimeField(auto_now=True)
-	plan_id = models.OneToOneField(
+	plan = models.OneToOneField(
 		Plan,
-		related_name='plan_gear_plan_id',
+		related_name='plan_gear_plan',
 		on_delete=models.CASCADE
 	)
 	has_rain_wear = models.BooleanField(default=True)
@@ -109,7 +109,7 @@ class PlanGear(models.Model):
 	riding_type = models.IntegerField(choices=RIDING_TYPE, blank=True, null=True)
 
 	def __str__(self):
-		return str(self.plan_id)
+		return str(self.plan)
 
 
 class PlanCustomGear(models.Model):
@@ -122,28 +122,28 @@ class PlanCustomGear(models.Model):
 		default=uuid.uuid4,
 		editable=False
 	)
-	created_user_id = models.ForeignKey(
+	created_user = models.ForeignKey(
 		settings_core.AUTH_USER_MODEL,
-		related_name='plan_custom_gear_created_user_id',
+		related_name='plan_custom_gear_created_user',
 		on_delete=models.CASCADE
 	)
 	created_at = models.DateTimeField(auto_now_add=True)
-	updated_user_id = models.ForeignKey(
+	updated_user = models.ForeignKey(
 		settings_core.AUTH_USER_MODEL,
-		related_name='plan_custom_gear_updated_user_id',
+		related_name='plan_custom_gear_updated_user',
 		on_delete=models.CASCADE
 	)
 	updated_at = models.DateTimeField(auto_now=True)
-	plan_id = models.ForeignKey(
+	plan = models.ForeignKey(
 		Plan,
-		related_name='plan_custom_gear_plan_id',
+		related_name='plan_custom_gear_plan',
 		on_delete=models.CASCADE
 	)
 	name = models.CharField(max_length=50)
 	sort_index = models.IntegerField()
 
 	def __str__(self):
-		return str(self.plan_id) + ' Name: ' + str(self.name)
+		return str(self.plan) + ' Name: ' + str(self.name)
 
 
 class PlanRoute(models.Model):
@@ -156,27 +156,27 @@ class PlanRoute(models.Model):
 		default=uuid.uuid4,
 		editable=False
 	)
-	created_user_id = models.ForeignKey(
+	created_user = models.ForeignKey(
 		settings_core.AUTH_USER_MODEL,
-		related_name='plan_route_created_user_id',
+		related_name='plan_route_created_user',
 		on_delete=models.CASCADE
 	)
 	created_at = models.DateTimeField(auto_now_add=True)
-	updated_user_id = models.ForeignKey(
+	updated_user = models.ForeignKey(
 		settings_core.AUTH_USER_MODEL,
-		related_name='plan_route_updated_user_id',
+		related_name='plan_route_updated_user',
 		on_delete=models.CASCADE
 	)
 	updated_at = models.DateTimeField(auto_now=True)
-	plan_id = models.ForeignKey(
+	plan = models.ForeignKey(
 		Plan,
-		related_name='plan_route_plan_id',
+		related_name='plan_route_plan',
 		on_delete=models.CASCADE
 	)
 	plan_date = models.DateField()
 
 	def __str__(self):
-		return str(self.plan_id) + ' Date: ' + str(self.plan_date)
+		return str(self.plan) + ' Date: ' + str(self.plan_date)
 
 
 class PlanRouteDetail(models.Model):
@@ -189,21 +189,21 @@ class PlanRouteDetail(models.Model):
 		default=uuid.uuid4,
 		editable=False
 	)
-	created_user_id = models.ForeignKey(
+	created_user = models.ForeignKey(
 		settings_core.AUTH_USER_MODEL,
-		related_name='plan_route_detail_created_user_id',
+		related_name='plan_route_detail_created_user',
 		on_delete=models.CASCADE
 	)
 	created_at = models.DateTimeField(auto_now_add=True)
-	updated_user_id = models.ForeignKey(
+	updated_user = models.ForeignKey(
 		settings_core.AUTH_USER_MODEL,
-		related_name='plan_route_detail_updated_user_id',
+		related_name='plan_route_detail_updated_user',
 		on_delete=models.CASCADE
 	)
 	updated_at = models.DateTimeField(auto_now=True)
-	plan_route_id = models.ForeignKey(
+	plan_route = models.ForeignKey(
 		PlanRoute,
-		related_name='plan_route_detail_plan_route_id',
+		related_name='plan_route_detail_plan_route',
 		on_delete=models.CASCADE
 	)
 	name = models.CharField(max_length=50)
@@ -211,7 +211,7 @@ class PlanRouteDetail(models.Model):
 	sort_index = models.IntegerField()
 
 	def __str__(self):
-		return str(self.plan_route_id) + ' Name: ' + str(self.name)
+		return str(self.plan_route) + ' Name: ' + str(self.name)
 
 
 class PlanEscapeRoute(models.Model):
@@ -224,27 +224,27 @@ class PlanEscapeRoute(models.Model):
 		default=uuid.uuid4,
 		editable=False
 	)
-	created_user_id = models.ForeignKey(
+	created_user = models.ForeignKey(
 		settings_core.AUTH_USER_MODEL,
-		related_name='plan_escape_route_created_user_id',
+		related_name='plan_escape_route_created_user',
 		on_delete=models.CASCADE
 	)
 	created_at = models.DateTimeField(auto_now_add=True)
-	updated_user_id = models.ForeignKey(
+	updated_user = models.ForeignKey(
 		settings_core.AUTH_USER_MODEL,
-		related_name='plan_escape_route_updated_user_id',
+		related_name='plan_escape_route_updated_user',
 		on_delete=models.CASCADE
 	)
 	updated_at = models.DateTimeField(auto_now=True)
-	plan_id = models.OneToOneField(
+	plan = models.OneToOneField(
 		Plan,
-		related_name='plan_escape_route_plan_id',
+		related_name='plan_escape_route_plan',
 		on_delete=models.CASCADE
 	)
 	content = models.TextField(max_length=300, blank=True, null=True)
 
 	def __str__(self):
-		return str(self.plan_id)
+		return str(self.plan)
 
 
 class PlanMember(models.Model):
@@ -261,26 +261,26 @@ class PlanMember(models.Model):
 		default=uuid.uuid4,
 		editable=False
 	)
-	created_user_id = models.ForeignKey(
+	created_user = models.ForeignKey(
 		settings_core.AUTH_USER_MODEL,
-		related_name='plan_member_created_user_id',
+		related_name='plan_member_created_user',
 		on_delete=models.CASCADE
 	)
 	created_at = models.DateTimeField(auto_now_add=True)
-	updated_user_id = models.ForeignKey(
+	updated_user = models.ForeignKey(
 		settings_core.AUTH_USER_MODEL,
-		related_name='plan_member_updated_user_id',
+		related_name='plan_member_updated_user',
 		on_delete=models.CASCADE
 	)
 	updated_at = models.DateTimeField(auto_now=True)
-	plan_id = models.ForeignKey(
+	plan = models.ForeignKey(
 		Plan,
-		related_name='plan_member_plan_id',
+		related_name='plan_member_plan',
 		on_delete=models.CASCADE
 	)
-	user_id = models.ForeignKey(
+	user = models.ForeignKey(
 		settings_core.AUTH_USER_MODEL,
-		related_name='plan_member_user_id',
+		related_name='plan_member_user',
 		on_delete=models.SET_NULL,
 		blank=True,
 		null=True
@@ -302,7 +302,7 @@ class PlanMember(models.Model):
 	hitococo_id = models.CharField(max_length=50, blank=True, null=True)
 
 	def __str__(self):
-		return str(self.plan_id) + ' Name: ' + str(self.name)
+		return str(self.plan) + ' Name: ' + str(self.name)
 
 
 class Bookmark(models.Model):
@@ -314,21 +314,21 @@ class Bookmark(models.Model):
 		default=uuid.uuid4,
 		editable=False
 	)
-	user_id = models.ForeignKey(
+	user = models.ForeignKey(
 		settings_core.AUTH_USER_MODEL,
-		related_name='bookmark_user_id',
+		related_name='bookmark_user',
 		on_delete=models.CASCADE
 	)
 	created_at = models.DateTimeField(auto_now_add=True)
 	updated_at = models.DateTimeField(auto_now=True)
-	plan_id = models.ForeignKey(
+	plan = models.ForeignKey(
 		Plan,
-		related_name='bookmark_plan_id',
+		related_name='bookmark_plan',
 		on_delete=models.CASCADE
 	)
 
 	class Meta:
-		unique_together = (('user_id', 'plan_id'),)
+		unique_together = (('user', 'plan'),)
 
 	def __str__(self):
-		return str(self.plan_id) + ' User: ' + str(self.user_id)
+		return str(self.plan) + ' User: ' + str(self.user)

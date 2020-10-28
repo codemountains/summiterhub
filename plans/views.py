@@ -24,7 +24,7 @@ class PlanViewSet(viewsets.ModelViewSet):
 		param_mountain = self.request.query_params.get('mountain')
 
 		if param_mountain is None:
-			return self.queryset.filter(created_user_id=self.request.user)
+			return self.queryset.filter(created_user=self.request.user)
 
 		return self.queryset.filter(
 			(
@@ -35,17 +35,17 @@ class PlanViewSet(viewsets.ModelViewSet):
 					| Q(mountain_fifth__contains=param_mountain)
 			)
 			&
-			Q(created_user_id=self.request.user)
+			Q(created_user=self.request.user)
 		)
 
 	def perform_create(self, serializer):
 		serializer.save(
-			created_user_id=self.request.user,
-			updated_user_id=self.request.user
+			created_user=self.request.user,
+			updated_user=self.request.user
 		)
 
 	def perform_update(self, serializer):
-		serializer.save(updated_user_id=self.request.user)
+		serializer.save(updated_user=self.request.user)
 
 
 class PlanGearViewSet(viewsets.ModelViewSet):
@@ -56,16 +56,16 @@ class PlanGearViewSet(viewsets.ModelViewSet):
 	queryset = PlanGear.objects.all()
 
 	def get_queryset(self):
-		return self.queryset.filter(plan_id_id=self.kwargs.get('plan_id'))
+		return self.queryset.filter(plan_id=self.kwargs.get('plan_id'))
 
 	def perform_create(self, serializer):
 		serializer.save(
-			created_user_id=self.request.user,
-			updated_user_id=self.request.user
+			created_user=self.request.user,
+			updated_user=self.request.user
 		)
 
 	def perform_update(self, serializer):
-		serializer.save(updated_user_id=self.request.user)
+		serializer.save(updated_user=self.request.user)
 
 
 class PlanCustomGearViewSet(viewsets.ModelViewSet):
@@ -76,16 +76,16 @@ class PlanCustomGearViewSet(viewsets.ModelViewSet):
 	queryset = PlanCustomGear.objects.all()
 
 	def get_queryset(self):
-		return self.queryset.filter(plan_id_id=self.kwargs.get('plan_id'))
+		return self.queryset.filter(plan_id=self.kwargs.get('plan_id'))
 
 	def perform_create(self, serializer):
 		serializer.save(
-			created_user_id=self.request.user,
-			updated_user_id=self.request.user
+			created_user=self.request.user,
+			updated_user=self.request.user
 		)
 
 	def perform_update(self, serializer):
-		serializer.save(updated_user_id=self.request.user)
+		serializer.save(updated_user=self.request.user)
 
 
 class PlanRouteViewSet(viewsets.ModelViewSet):
@@ -96,16 +96,16 @@ class PlanRouteViewSet(viewsets.ModelViewSet):
 	queryset = PlanRoute.objects.all()
 
 	def get_queryset(self):
-		return self.queryset.filter(plan_id_id=self.kwargs.get('plan_id'))
+		return self.queryset.filter(plan_id=self.kwargs.get('plan_id'))
 
 	def perform_create(self, serializer):
 		serializer.save(
-			created_user_id=self.request.user,
-			updated_user_id=self.request.user
+			created_user=self.request.user,
+			updated_user=self.request.user
 		)
 
 	def perform_update(self, serializer):
-		serializer.save(updated_user_id=self.request.user)
+		serializer.save(updated_user=self.request.user)
 
 
 class PlanRouteDetailViewSet(viewsets.ModelViewSet):
@@ -117,16 +117,16 @@ class PlanRouteDetailViewSet(viewsets.ModelViewSet):
 
 	def get_queryset(self):
 		return self.queryset.filter(
-			plan_route_id_id=self.kwargs.get('plan_route_id'))
+			plan_route_id=self.kwargs.get('plan_route_id'))
 
 	def perform_create(self, serializer):
 		serializer.save(
-			created_user_id=self.request.user,
-			updated_user_id=self.request.user
+			created_user=self.request.user,
+			updated_user=self.request.user
 		)
 
 	def perform_update(self, serializer):
-		serializer.save(updated_user_id=self.request.user)
+		serializer.save(updated_user=self.request.user)
 
 
 class PlanEscapeRouteViewSet(viewsets.ModelViewSet):
@@ -137,16 +137,16 @@ class PlanEscapeRouteViewSet(viewsets.ModelViewSet):
 	queryset = PlanEscapeRoute.objects.all()
 
 	def get_queryset(self):
-		return self.queryset.filter(plan_id_id=self.kwargs.get('plan_id'))
+		return self.queryset.filter(plan_id=self.kwargs.get('plan_id'))
 
 	def perform_create(self, serializer):
 		serializer.save(
-			created_user_id=self.request.user,
-			updated_user_id=self.request.user
+			created_user=self.request.user,
+			updated_user=self.request.user
 		)
 
 	def perform_update(self, serializer):
-		serializer.save(updated_user_id=self.request.user)
+		serializer.save(updated_user=self.request.user)
 
 
 class PlanMemberViewSet(viewsets.ModelViewSet):
@@ -157,16 +157,16 @@ class PlanMemberViewSet(viewsets.ModelViewSet):
 	queryset = PlanMember.objects.all()
 
 	def get_queryset(self):
-		return self.queryset.filter(plan_id_id=self.kwargs.get('plan_id'))
+		return self.queryset.filter(plan_id=self.kwargs.get('plan_id'))
 
 	def perform_create(self, serializer):
 		serializer.save(
-			created_user_id=self.request.user,
-			updated_user_id=self.request.user
+			created_user=self.request.user,
+			updated_user=self.request.user
 		)
 
 	def perform_update(self, serializer):
-		serializer.save(updated_user_id=self.request.user)
+		serializer.save(updated_user=self.request.user)
 
 
 class BookmarkViewSet(viewsets.ModelViewSet):
@@ -177,11 +177,11 @@ class BookmarkViewSet(viewsets.ModelViewSet):
 	queryset = Bookmark.objects.all()
 
 	def get_queryset(self):
-		return self.queryset.filter(user_id=self.request.user)
+		return self.queryset.filter(user=self.request.user)
 
 	def perform_create(self, serializer):
 		try:
-			serializer.save(user_id=self.request.user)
+			serializer.save(user=self.request.user)
 		except BaseException:
 			raise ValidationError('この計画はブックマーク済みです')
 

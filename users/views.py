@@ -1,18 +1,24 @@
 from django.db.models import Q
+from django.utils import timezone
+from django.core.mail import EmailMessage
 from rest_framework import status, generics, viewsets
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
-from .serializers import UserSerializer, UserDetailSerializer, \
-	FriendSerializer, FriendRequestSerializer, BlockingFriendSerializer, \
-	PartySerializer, PartyMemberSerializer
-from .models import User, UserDetail, Friend, FriendRequest, BlockingFriend, \
-	Party, PartyMember
+from .serializers import UserSerializer, UserTokenSerializer, \
+	UserDetailSerializer, FriendSerializer, FriendRequestSerializer, \
+	BlockingFriendSerializer, PartySerializer, PartyMemberSerializer
+from .models import User, UserDetail, UserToken, Friend, FriendRequest, \
+	BlockingFriend, Party, PartyMember
+
+import datetime
+import hashlib
 
 
 class CreateUserView(generics.CreateAPIView):
 	"""
 	ユーザ作成 CreateAPIView
+	ユーザをis_active=Falseで作成 > UserTokenCreateViewで認証トークンを発行
 	"""
 	serializer_class = UserSerializer
 	permission_classes = (AllowAny,)
@@ -39,6 +45,93 @@ class UserViewSet(viewsets.ModelViewSet):
 		return Response(response, status=status.HTTP_400_BAD_REQUEST)
 
 
+class UserTokenCreateView(generics.CreateAPIView):
+	"""
+	ユーザ認証トークン CreateAPIView
+	"""
+	serializer_class = UserTokenSerializer
+	queryset = UserToken.objects.all()
+	permission_classes = (AllowAny,)
+
+	def perform_create(self, serializer):
+		param_user_id = self.request.query_params.get('user_id')
+		user = User.objects.filter(id=param_user_id).first()
+
+		if user is None:
+			raise ValidationError('ユーザが見つかりません')
+
+		if user.is_active:
+			raise ValidationError('ユーザはすでに認証済みです')
+
+		# UserToken
+		if UserToken.objects.filter(user=user).exists():
+			UserToken.objects.get(user=user).delete()
+
+		# Tokenを生成
+		now = timezone.now()
+		non_hash_token = user.email + user.password + now.strftime('%Y%m%d%H%M%S%f')
+		hashed_token = hashlib.sha1(non_hash_token.encode('utf-8')).hexdigest()
+		expiration_at = now + datetime.timedelta(days=1)
+
+		created_user_token = serializer.save(
+			user=user,
+			email=user.email,
+			token=hashed_token,
+			expiration_at=expiration_at
+		)
+
+		auth_url = 'https://sumitterhub.com/v1/uses/tokens/activate/{0}/?token={1}'.format(
+			created_user_token.id,
+			created_user_token.token
+		)
+
+		# メールを送信
+		subject = 'SummiterHub メールアドレス確認'
+		message = '{0} 様　\n新規登録ありがとうございます。\nURL: {1}'.format(user.email, auth_url)
+		from_email = 'info@summiterhub.com'
+		to_list = [user.email]
+		cc_list = []
+		bcc_list = []
+
+		message = EmailMessage(
+			subject=subject,
+			body=message,
+			from_email=from_email,
+			to=to_list,
+			cc=cc_list,
+			bcc=bcc_list
+		)
+		message.send()
+
+
+class UserTokenUpdateView(generics.UpdateAPIView):
+	"""
+	ユーザ認証トークン UpdateAPIView
+	"""
+	serializer_class = UserTokenSerializer
+	queryset = UserToken.objects.all()
+	permission_classes = (AllowAny,)
+
+	def perform_update(self, serializer):
+		# Tokenの確認
+		user_token = UserToken.objects.filter(
+			Q(id=self.kwargs.get('pk'))
+			&
+			Q(token=self.request.query_params.get('token'))
+		).first()
+
+		if user_token is None:
+			raise ValidationError('認証に失敗しました')
+		if timezone.now() > user_token.expiration_at:
+			raise ValidationError('認証の有効期限(24時間)を超えています')
+
+		user = User.objects.filter(id=user_token.user.id).first()
+		if user is None:
+			raise ValidationError('ユーザが存在しません')
+		user.is_active = True
+		user.save()
+
+
 class UserDetailViewSet(viewsets.ModelViewSet):
 	"""
 	ユーザ詳細 ModelViewSet
@@ -47,11 +140,11 @@ class UserDetailViewSet(viewsets.ModelViewSet):
 	queryset = UserDetail.objects.all()
 
 	def get_queryset(self):
-		return self.queryset.filter(user_id=self.request.user)
+		return self.queryset.filter(user=self.request.user)
 
 	def perform_create(self, serializer):
 		try:
-			serializer.save(user_id=self.request.user)
+			serializer.save(user=self.request.user)
 		except BaseException:
 			raise ValidationError('すでにユーザ詳細を作成済みです')
 
@@ -65,7 +158,7 @@ class FriendViewSet(viewsets.ModelViewSet):
 
 	def get_queryset(self):
 		return self.queryset.filter(
-			Q(src_user_id=self.request.user) | Q(dest_user_id=self.request.user)
+			Q(src_user=self.request.user) | Q(dest_user=self.request.user)
 		)
 
 	def perform_create(self, serializer):
@@ -86,12 +179,12 @@ class FriendDetailViewSet(viewsets.ReadOnlyModelViewSet):
 		friend = Friend.objects.filter(
 			Q(id=self.kwargs.get('friend_id'))
 			&
-			Q(src_user_id=self.request.user)
+			Q(src_user=self.request.user)
 		).first()
 
 		if friend is None:
 			return None
-		return self.queryset.filter(user_id=friend.dest_user_id)
+		return self.queryset.filter(user=friend.dest_user)
 
 
 class FriendRequestViewSet(viewsets.ModelViewSet):
@@ -103,9 +196,9 @@ class FriendRequestViewSet(viewsets.ModelViewSet):
 
 	def get_queryset(self):
 		return self.queryset.filter(
-			Q(src_user_id=self.request.user)
+			Q(src_user=self.request.user)
 			|
-			(Q(dest_user_id=self.request.user) | Q(
+			(Q(dest_user=self.request.user) | Q(
 				dest_email=self.request.user.email))
 		)
 
@@ -117,16 +210,16 @@ class FriendRequestViewSet(viewsets.ModelViewSet):
 			raise ValidationError('自分にフレンド申請はできません')
 
 		try:
-			serializer.save(src_user_id=self.request.user, dest_user_id=user)
+			serializer.save(src_user=self.request.user, dest_user=user)
 		except BaseException:
 			raise ValidationError('すでにフレンド申請済みです')
 
 	def perform_update(self, serializer):
 		friend_request = self.queryset.filter(id=self.kwargs.get('pk')).first()
-		dest_user_id = friend_request.dest_user_id
+		dest_user = friend_request.dest_user
 
-		if dest_user_id is not None:
-			if dest_user_id != self.request.user:
+		if dest_user is not None:
+			if dest_user != self.request.user:
 				raise ValidationError('申請されたリクエストのみ承認または拒否できます')
 
 		serializer.save()
@@ -140,11 +233,11 @@ class BlockingFriendViewSet(viewsets.ModelViewSet):
 	queryset = BlockingFriend.objects.all()
 
 	def get_queryset(self):
-		return self.queryset.filter(src_user_id=self.request.user)
+		return self.queryset.filter(src_user=self.request.user)
 
 	def perform_create(self, serializer):
 		try:
-			serializer.save(src_user_id=self.request.user)
+			serializer.save(src_user=self.request.user)
 		except BaseException:
 			raise ValidationError('すでにブロック済みです')
 
@@ -157,10 +250,10 @@ class PartyViewSet(viewsets.ModelViewSet):
 	queryset = Party.objects.all()
 
 	def get_queryset(self):
-		return self.queryset.filter(user_id=self.request.user)
+		return self.queryset.filter(user=self.request.user)
 
 	def perform_create(self, serializer):
-		serializer.save(user_id=self.request.user)
+		serializer.save(user=self.request.user)
 
 
 class PartyMemberViewSet(viewsets.ModelViewSet):
@@ -175,8 +268,8 @@ class PartyMemberViewSet(viewsets.ModelViewSet):
 
 	def perform_create(self, serializer):
 		serializer.save(
-			user_id=self.request.user,
-			party_id_id=self.kwargs.get('party_id')
+			user=self.request.user,
+			party_id=self.kwargs.get('party_id')
 		)
 
 
@@ -191,19 +284,19 @@ class PartyMemberDetailViewSet(viewsets.ReadOnlyModelViewSet):
 		party_member = PartyMember.objects.filter(
 			Q(id=self.kwargs.get('party_member_id'))
 			&
-			Q(party_id_id=self.kwargs.get('party_id'))
+			Q(party_id=self.kwargs.get('party_id'))
 			&
-			Q(user_id=self.request.user)
+			Q(user=self.request.user)
 		).first()
 		if party_member is None:
 			return None
 
 		friend = Friend.objects.filter(
-			Q(src_user_id=self.request.user)
+			Q(src_user=self.request.user)
 			&
-			Q(dest_user_id=party_member.entry_user_id)
+			Q(dest_user=party_member.entry_user)
 		).first()
 		if friend is None:
 			return None
 
-		return self.queryset.filter(user_id=friend.dest_user_id)
+		return self.queryset.filter(user=friend.dest_user)

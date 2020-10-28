@@ -16,9 +16,9 @@ class Gear(models.Model):
 		default=uuid.uuid4,
 		editable=False
 	)
-	user_id = models.ForeignKey(
+	user = models.ForeignKey(
 		settings_core.AUTH_USER_MODEL,
-		related_name='gear_user_id',
+		related_name='gear_user',
 		on_delete=models.CASCADE
 	)
 	created_at = models.DateTimeField(auto_now_add=True)
@@ -54,7 +54,7 @@ class Gear(models.Model):
 	riding_type = models.IntegerField(choices=RIDING_TYPE, blank=True, null=True)
 
 	def __str__(self):
-		return 'User: ' + str(self.user_id) + ' Title: ' + self.title
+		return 'User: ' + str(self.user) + ' Title: ' + self.title
 
 
 class CustomGear(models.Model):
@@ -67,20 +67,20 @@ class CustomGear(models.Model):
 		default=uuid.uuid4,
 		editable=False
 	)
-	user_id = models.ForeignKey(
+	user = models.ForeignKey(
 		settings_core.AUTH_USER_MODEL,
-		related_name='custom_gear_user_id',
+		related_name='custom_gear_user',
 		on_delete=models.CASCADE
 	)
 	created_at = models.DateTimeField(auto_now_add=True)
 	updated_at = models.DateTimeField(auto_now=True)
-	gear_id = models.ForeignKey(
+	gear = models.ForeignKey(
 		Gear,
-		related_name='custom_gear_gear_id',
+		related_name='custom_gear_gear',
 		on_delete=models.CASCADE
 	)
 	name = models.CharField(max_length=50)
 	sort_index = models.IntegerField()
 
 	def __str__(self):
-		return 'GearId: ' + str(self.gear_id_id) + ' Name: ' + self.name
+		return 'Gear: ' + str(self.gear) + ' Name: ' + self.name

@@ -15,3 +15,11 @@ def updated_at():
 		read_only=True
 	)
 	return fmt_updated_at
+
+
+def expiration_at():
+	fmt_expiration_at = serializers.DateTimeField(
+		format="%Y-%m-%d %H:%M",
+		read_only=True
+	)
+	return fmt_expiration_at
