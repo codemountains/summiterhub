@@ -10,7 +10,7 @@ def upload_path(instance, filename):
 	ext = filename.split('.')[-1]
 	return '/'.join([
 		'profile_image',
-		str(instance.id)+str('.')+str(ext)
+		str(instance.id) + str('.') + str(ext)
 	])
 
 
@@ -18,6 +18,7 @@ class UserManager(BaseUserManager):
 	"""
 	ユーザマネージャー
 	"""
+
 	def create_user(self, email, password=None):
 		if not email:
 			raise ValueError('メールアドレスは必須です')
@@ -30,6 +31,7 @@ class UserManager(BaseUserManager):
 
 	def create_superuser(self, email, password):
 		user = self.create_user(email, password)
+		user.is_active = True
 		user.is_staff = True
 		user.is_superuser = True
 		user.save(using=self._db)
@@ -43,7 +45,7 @@ class User(AbstractBaseUser, PermissionsMixin):
 	"""
 	id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
 	email = models.EmailField(unique=True)
-	is_active = models.BooleanField(default=True)
+	is_active = models.BooleanField(default=False)
 	is_staff = models.BooleanField(default=False)
 
 	objects = UserManager()
@@ -52,6 +54,26 @@ class User(AbstractBaseUser, PermissionsMixin):
 
 	def __str__(self):
 		return self.email
+
+
+class UserToken(models.Model):
+	"""
+	ユーザトークンモデル
+	メールアドレスの認証で使用
+	"""
+	id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+	user = models.OneToOneField(
+		settings_core.AUTH_USER_MODEL,
+		related_name='user_token_user',
+		on_delete=models.CASCADE
+	)
+	email = models.EmailField()
+	token = models.CharField(max_length=40, unique=True)
+	created_at = models.DateTimeField(auto_now_add=True)
+	expiration_at = models.DateTimeField()
+
+	def __str__(self):
+		return str(self.user)
 
 
 class UserDetail(models.Model):
@@ -67,15 +89,16 @@ class UserDetail(models.Model):
 		default=uuid.uuid4,
 		editable=False
 	)
-	user_id = models.OneToOneField(
+	user = models.OneToOneField(
 		settings_core.AUTH_USER_MODEL,
-		related_name='user_detail_user_id',
+		related_name='user_detail_user',
 		on_delete=models.CASCADE
 	)
 	created_at = models.DateTimeField(auto_now_add=True)
 	updated_at = models.DateTimeField(auto_now=True)
 	profile_name = models.CharField(max_length=100)
-	profile_image = models.ImageField(blank=True, null=True, upload_to=upload_path)
+	profile_image = models.ImageField(blank=True, null=True,
+									  upload_to=upload_path)
 	name = models.CharField(max_length=100)
 	postal_code = models.CharField(max_length=8)
 	prefecture = models.IntegerField(choices=PREFECTURE)
@@ -93,7 +116,7 @@ class UserDetail(models.Model):
 	hitococo_id = models.CharField(max_length=50, blank=True, null=True)
 
 	def __str__(self):
-		return str(self.user_id)
+		return str(self.user)
 
 
 class FriendRequest(models.Model):
@@ -107,15 +130,15 @@ class FriendRequest(models.Model):
 		default=uuid.uuid4,
 		editable=False
 	)
-	src_user_id = models.ForeignKey(
+	src_user = models.ForeignKey(
 		settings_core.AUTH_USER_MODEL,
-		related_name='friend_request_src_user_id',
+		related_name='friend_request_src_user',
 		on_delete=models.CASCADE
 	)
 	dest_email = models.EmailField()
-	dest_user_id = models.ForeignKey(
+	dest_user = models.ForeignKey(
 		settings_core.AUTH_USER_MODEL,
-		related_name='friend_request_dest_user_id',
+		related_name='friend_request_dest_user',
 		on_delete=models.CASCADE,
 		blank=True,
 		null=True
@@ -126,14 +149,15 @@ class FriendRequest(models.Model):
 	status_type = models.IntegerField(choices=STATUS_TYPE)
 
 	class Meta:
-		unique_together = (('src_user_id', 'dest_email'),)
+		unique_together = (('src_user', 'dest_email'),)
 
 	def __str__(self):
-		src_user_id = str(self.src_user_id)
+		src_user = str(self.src_user)
 		dest_email = str(self.dest_email)
-		status_type_name = str(choices.FRIEND_STATUS_TYPE[self.status_type - 1][1])
-		return 'Src: ' + src_user_id + ' Dest email: ' + dest_email + \
-			' Status: ' + status_type_name
+		status_type_name = str(
+			choices.FRIEND_STATUS_TYPE[self.status_type - 1][1])
+		return 'Src: ' + src_user + ' Dest email: ' + dest_email + \
+			   ' Status: ' + status_type_name
 
 
 class Friend(models.Model):
@@ -145,29 +169,29 @@ class Friend(models.Model):
 		default=uuid.uuid4,
 		editable=False
 	)
-	src_user_id = models.ForeignKey(
+	src_user = models.ForeignKey(
 		settings_core.AUTH_USER_MODEL,
-		related_name='friend_src_user_id',
+		related_name='friend_src_user',
 		on_delete=models.CASCADE
 	)
-	dest_user_id = models.ForeignKey(
+	dest_user = models.ForeignKey(
 		settings_core.AUTH_USER_MODEL,
-		related_name='friend_dest_user_id',
+		related_name='friend_dest_user',
 		on_delete=models.CASCADE
 	)
 	created_at = models.DateTimeField(auto_now_add=True)
 	updated_at = models.DateTimeField(auto_now=True)
-	friend_request_id = models.ForeignKey(
+	friend_request = models.ForeignKey(
 		FriendRequest,
-		related_name='friend_friend_request_id',
+		related_name='friend_friend_request',
 		on_delete=models.CASCADE
 	)
 
 	class Meta:
-		unique_together = (('src_user_id', 'dest_user_id'),)
+		unique_together = (('src_user', 'dest_user'),)
 
 	def __str__(self):
-		return 'Src: ' + str(self.src_user_id) + ' Dest: ' + str(self.dest_user_id)
+		return 'Src: ' + str(self.src_user) + ' Dest: ' + str(self.dest_user)
 
 
 class BlockingFriend(models.Model):
@@ -179,24 +203,24 @@ class BlockingFriend(models.Model):
 		default=uuid.uuid4,
 		editable=False
 	)
-	src_user_id = models.ForeignKey(
+	src_user = models.ForeignKey(
 		settings_core.AUTH_USER_MODEL,
-		related_name='blocking_friend_src_user_id',
+		related_name='blocking_friend_src_user',
 		on_delete=models.CASCADE
 	)
-	dest_user_id = models.ForeignKey(
+	dest_user = models.ForeignKey(
 		settings_core.AUTH_USER_MODEL,
-		related_name='blocking_friend_dest_user_id',
+		related_name='blocking_friend_dest_user',
 		on_delete=models.CASCADE
 	)
 	created_at = models.DateTimeField(auto_now_add=True)
 	updated_at = models.DateTimeField(auto_now=True)
 
 	class Meta:
-		unique_together = (('src_user_id', 'dest_user_id'),)
+		unique_together = (('src_user', 'dest_user'),)
 
 	def __str__(self):
-		return 'Src: ' + str(self.src_user_id) + ' Dest: ' + str(self.dest_user_id)
+		return 'Src: ' + str(self.src_user) + ' Dest: ' + str(self.dest_user)
 
 
 class Party(models.Model):
@@ -208,9 +232,9 @@ class Party(models.Model):
 		default=uuid.uuid4,
 		editable=False
 	)
-	user_id = models.ForeignKey(
+	user = models.ForeignKey(
 		settings_core.AUTH_USER_MODEL,
-		related_name='party_user_id',
+		related_name='party_user',
 		on_delete=models.CASCADE
 	)
 	created_at = models.DateTimeField(auto_now_add=True)
@@ -222,7 +246,7 @@ class Party(models.Model):
 		verbose_name_plural = 'Parties'
 
 	def __str__(self):
-		return 'User: ' + str(self.user_id) + ' Name: ' + self.name
+		return 'User: ' + str(self.user) + ' Name: ' + self.name
 
 
 class PartyMember(models.Model):
@@ -234,24 +258,24 @@ class PartyMember(models.Model):
 		default=uuid.uuid4,
 		editable=False
 	)
-	user_id = models.ForeignKey(
+	user = models.ForeignKey(
 		settings_core.AUTH_USER_MODEL,
-		related_name='party_member_user_id',
+		related_name='party_member_user',
 		on_delete=models.CASCADE
 	)
 	created_at = models.DateTimeField(auto_now_add=True)
 	updated_at = models.DateTimeField(auto_now=True)
-	party_id = models.ForeignKey(
+	party = models.ForeignKey(
 		Party,
-		related_name='party_member_party_id',
+		related_name='party_member_party',
 		on_delete=models.CASCADE
 	)
-	entry_user_id = models.ForeignKey(
+	entry_user = models.ForeignKey(
 		settings_core.AUTH_USER_MODEL,
-		related_name='party_member_entry_user_id',
+		related_name='party_member_entry_user',
 		on_delete=models.CASCADE
 	)
 	sort_index = models.IntegerField()
 
 	def __str__(self):
-		return str(self.party_id) + ' Entry: ' + str(self.entry_user_id)
+		return str(self.party) + ' Entry: ' + str(self.entry_user)

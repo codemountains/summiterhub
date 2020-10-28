@@ -1,7 +1,8 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.utils.translation import gettext as _
-from .models import User, UserDetail, Friend, FriendRequest, BlockingFriend, Party, PartyMember
+from .models import User, UserToken, UserDetail, Friend, FriendRequest, \
+	BlockingFriend, Party, PartyMember
 
 
 class UserAdmin(BaseUserAdmin):
@@ -31,6 +32,7 @@ class UserAdmin(BaseUserAdmin):
 
 
 admin.site.register(User, UserAdmin)
+admin.site.register(UserToken)
 admin.site.register(UserDetail)
 admin.site.register(Friend)
 admin.site.register(FriendRequest)

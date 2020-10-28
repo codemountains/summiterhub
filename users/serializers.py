@@ -1,8 +1,8 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
-from .models import UserDetail, Friend, FriendRequest, BlockingFriend, \
-	Party, PartyMember
-from utils.format import created_at, updated_at
+from .models import UserDetail, UserToken, Friend, FriendRequest, \
+	BlockingFriend, Party, PartyMember
+from utils.format import created_at, updated_at, expiration_at
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -30,9 +30,26 @@ class UserSerializer(serializers.ModelSerializer):
 		instance.save()
 		return instance
 
-	def __delete__(self, instance):
-		instance.is_active = False
-		instance.save()
+
+class UserTokenSerializer(serializers.ModelSerializer):
+	created_at = created_at()
+	expiration_at = expiration_at()
+
+	class Meta:
+		model = UserToken
+		fields = [
+			'id',
+			'user',
+			'email',
+			'token',
+			'created_at',
+			'expiration_at'
+		]
+		extra_kwargs = {
+			'user': {'read_only': True},
+			'email': {'read_only': True},
+			'token': {'read_only': True}
+		}
 
 
 class UserDetailSerializer(serializers.ModelSerializer):
@@ -58,7 +75,7 @@ class UserDetailSerializer(serializers.ModelSerializer):
 		model = UserDetail
 		fields = [
 			'id',
-			'user_id',
+			'user',
 			'created_at',
 			'updated_at',
 			'profile_name',
@@ -82,7 +99,7 @@ class UserDetailSerializer(serializers.ModelSerializer):
 			'hitococo_id',
 		]
 		extra_kwargs = {
-			'user_id': {'read_only': True}
+			'user': {'read_only': True}
 		}
 
 
@@ -101,9 +118,9 @@ class FriendRequestSerializer(serializers.ModelSerializer):
 		model = FriendRequest
 		fields = [
 			'id',
-			'src_user_id',
+			'src_user',
 			'dest_email',
-			'dest_user_id',
+			'dest_user',
 			'created_at',
 			'updated_at',
 			'message',
@@ -111,7 +128,7 @@ class FriendRequestSerializer(serializers.ModelSerializer):
 			'status_type_name'
 		]
 		extra_kwargs = {
-			'src_user_id': {'read_only': True}
+			'src_user': {'read_only': True}
 		}
 
 
@@ -126,15 +143,15 @@ class FriendSerializer(serializers.ModelSerializer):
 		model = Friend
 		fields = [
 			'id',
-			'src_user_id',
-			'dest_user_id',
+			'src_user',
+			'dest_user',
 			'created_at',
 			'updated_at',
 			'friend_request_id'
 		]
 		extra_kwargs = {
-			'src_user_id': {'read_only': True},
-			'dest_user_id': {'read_only': True}
+			'src_user': {'read_only': True},
+			'dest_user': {'read_only': True}
 		}
 
 
@@ -149,13 +166,13 @@ class BlockingFriendSerializer(serializers.ModelSerializer):
 		model = BlockingFriend
 		fields = [
 			'id',
-			'src_user_id',
-			'dest_user_id',
+			'src_user',
+			'dest_user',
 			'created_at',
 			'updated_at',
 		]
 		extra_kwargs = {
-			'src_user_id': {'read_only': True}
+			'src_user': {'read_only': True}
 		}
 
 
@@ -170,14 +187,14 @@ class PartySerializer(serializers.ModelSerializer):
 		model = Party
 		fields = [
 			'id',
-			'user_id',
+			'user',
 			'created_at',
 			'updated_at',
 			'name',
 			'remarks'
 		]
 		extra_kwargs = {
-			'user_id': {'read_only': True}
+			'user': {'read_only': True}
 		}
 
 
@@ -192,14 +209,14 @@ class PartyMemberSerializer(serializers.ModelSerializer):
 		model = PartyMember
 		fields = [
 			'id',
-			'user_id',
+			'user',
 			'created_at',
 			'updated_at',
-			'party_id',
-			'entry_user_id',
+			'party',
+			'entry_user',
 			'sort_index'
 		]
 		extra_kwargs = {
-			'user_id': {'read_only': True},
-			'party_id': {'read_only': True}
+			'user': {'read_only': True},
+			'party': {'read_only': True}
 		}

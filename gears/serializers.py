@@ -22,7 +22,7 @@ class GearSerializer(serializers.ModelSerializer):
 		model = Gear
 		fields = [
 			'id',
-			'user_id',
+			'user',
 			'created_at',
 			'updated_at',
 			'title',
@@ -58,7 +58,7 @@ class GearSerializer(serializers.ModelSerializer):
 			'riding_type_name'
 		]
 		extra_kwargs = {
-			'user_id': {'read_only': True}
+			'user': {'read_only': True}
 		}
 
 
@@ -73,14 +73,14 @@ class CustomGearSerializer(serializers.ModelSerializer):
 		model = CustomGear
 		fields = [
 			'id',
-			'user_id',
+			'user',
 			'created_at',
 			'updated_at',
-			'gear_id',
+			'gear',
 			'name',
 			'sort_index'
 		]
 		extra_kwargs = {
-			'user_id': {'read_only': True},
-			'gear_id': {'read_only': True}
+			'user': {'read_only': True},
+			'gear': {'read_only': True}
 		}

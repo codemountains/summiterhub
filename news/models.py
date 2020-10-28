@@ -30,7 +30,7 @@ class News(models.Model):
 		verbose_name_plural = 'News'
 
 	def __str__(self):
-		return 'Id: ' + str(self.id) + ' Title: ' + self.title
+		return self.title
 
 
 class ReadNews(models.Model):
@@ -42,14 +42,14 @@ class ReadNews(models.Model):
 		default=uuid.uuid4,
 		editable=False
 	)
-	user_id = models.ForeignKey(
+	user = models.ForeignKey(
 		settings_core.AUTH_USER_MODEL,
 		related_name='read_news_user_id',
 		on_delete=models.CASCADE
 	)
 	created_at = models.DateTimeField(auto_now_add=True)
 	updated_at = models.DateTimeField(auto_now=True)
-	news_id = models.ForeignKey(
+	news = models.ForeignKey(
 		News,
 		related_name='read_news_news_id',
 		on_delete=models.CASCADE
@@ -57,7 +57,7 @@ class ReadNews(models.Model):
 
 	class Meta:
 		verbose_name_plural = 'ReadNews'
-		unique_together = (('user_id', 'news_id'),)
+		unique_together = (('user', 'news'),)
 
 	def __str__(self):
-		return 'NewsId: ' + str(self.news_id_id) + ' User: ' + str(self.user_id)
+		return 'News: ' + str(self.news) + ' User: ' + str(self.user)

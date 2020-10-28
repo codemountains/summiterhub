@@ -21,7 +21,6 @@ class NewsSerializer(serializers.ModelSerializer):
 			'attached_image'
 		]
 		extra_kwargs = {
-			'is_active': {'read_only': True},
 			'title': {'read_only': True},
 			'content': {'read_only': True},
 			'attached_image': {'read_only': True}
@@ -39,12 +38,11 @@ class ReadNewsSerializer(serializers.ModelSerializer):
 		model = ReadNews
 		fields = [
 			'id',
-			'user_id',
+			'user',
 			'created_at',
 			'updated_at',
-			'news_id'
+			'news'
 		]
 		extra_kwargs = {
-			'user_id': {'read_only': True},
-			'is_active': {'read_only': True}
+			'user': {'read_only': True},
 		}
