@@ -625,3 +625,7 @@ Temporary Items
 # profiling data
 
 # End of https://www.toptal.com/developers/gitignore/api/python,django,pycharm,pycharm+all,pycharm+iml,jetbrains,jetbrains+all,jetbrains+iml,macos
+
+# env
+
+.env
