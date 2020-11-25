@@ -3,6 +3,7 @@ from rest_framework.permissions import AllowAny
 from rest_framework.exceptions import ValidationError
 from .serializers import NewsSerializer, ReadNewsSerializer
 from .models import News, ReadNews
+from .paginations import NewsPagination
 
 
 class NewsListView(generics.ListAPIView):
@@ -12,6 +13,7 @@ class NewsListView(generics.ListAPIView):
 	serializer_class = NewsSerializer
 	permission_classes = (AllowAny,)
 	queryset = News.objects.all()
+	pagination_class = NewsPagination
 
 
 class ReadNewsCreateView(generics.CreateAPIView):
@@ -20,6 +22,7 @@ class ReadNewsCreateView(generics.CreateAPIView):
 	"""
 	serializer_class = ReadNewsSerializer
 	queryset = ReadNews.objects.all()
+	pagination_class = None
 
 	def get_queryset(self):
 		return self.queryset.filter(user=self.request.user)

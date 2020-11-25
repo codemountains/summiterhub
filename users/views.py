@@ -10,6 +10,7 @@ from .serializers import UserSerializer, UserTokenSerializer, \
 	BlockingFriendSerializer, PartySerializer, PartyMemberSerializer
 from .models import User, UserDetail, UserToken, Friend, FriendRequest, \
 	BlockingFriend, Party, PartyMember
+from .paginations import FriendPagination, PartyPagination
 
 import datetime
 import hashlib
@@ -22,6 +23,7 @@ class CreateUserView(generics.CreateAPIView):
 	"""
 	serializer_class = UserSerializer
 	permission_classes = (AllowAny,)
+	pagination_class = None
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -30,6 +32,7 @@ class UserViewSet(viewsets.ModelViewSet):
 	"""
 	serializer_class = UserSerializer
 	queryset = User.objects.all()
+	pagination_class = None
 
 	def get_queryset(self):
 		return self.queryset.filter(id=self.request.user.id)
@@ -52,6 +55,7 @@ class UserTokenCreateView(generics.CreateAPIView):
 	serializer_class = UserTokenSerializer
 	queryset = UserToken.objects.all()
 	permission_classes = (AllowAny,)
+	pagination_class = None
 
 	def perform_create(self, serializer):
 		param_user_id = self.request.query_params.get('user_id')
@@ -69,7 +73,8 @@ class UserTokenCreateView(generics.CreateAPIView):
 
 		# Tokenを生成
 		now = timezone.now()
-		non_hash_token = user.email + user.password + now.strftime('%Y%m%d%H%M%S%f')
+		non_hash_token = user.email + user.password + now.strftime(
+			'%Y%m%d%H%M%S%f')
 		hashed_token = hashlib.sha1(non_hash_token.encode('utf-8')).hexdigest()
 		expiration_at = now + datetime.timedelta(days=1)
 
@@ -80,14 +85,18 @@ class UserTokenCreateView(generics.CreateAPIView):
 			expiration_at=expiration_at
 		)
 
-		auth_url = 'https://sumitterhub.com/v1/uses/tokens/activate/{0}/?token={1}'.format(
+		base_url = 'https://sumitterhub.com/v1/uses/tokens/activate/{0}/?token={1}'
+		auth_url = base_url.format(
 			created_user_token.id,
 			created_user_token.token
 		)
 
 		# メールを送信
 		subject = 'SummiterHub メールアドレス確認'
-		message = '{0} 様　\n新規登録ありがとうございます。\nURL: {1}'.format(user.email, auth_url)
+		message = '{0} 様　\n新規登録ありがとうございます。\nURL: {1}'.format(
+			user.email,
+			auth_url
+		)
 		from_email = 'info@summiterhub.com'
 		to_list = [user.email]
 		cc_list = []
@@ -111,6 +120,7 @@ class UserTokenUpdateView(generics.UpdateAPIView):
 	serializer_class = UserTokenSerializer
 	queryset = UserToken.objects.all()
 	permission_classes = (AllowAny,)
+	pagination_class = None
 
 	def perform_update(self, serializer):
 		# Tokenの確認
@@ -138,6 +148,7 @@ class UserDetailViewSet(viewsets.ModelViewSet):
 	"""
 	serializer_class = UserDetailSerializer
 	queryset = UserDetail.objects.all()
+	pagination_class = None
 
 	def get_queryset(self):
 		return self.queryset.filter(user=self.request.user)
@@ -152,14 +163,14 @@ class UserDetailViewSet(viewsets.ModelViewSet):
 class FriendViewSet(viewsets.ModelViewSet):
 	"""
 	フレンド ModelViewSet
+	フレンドは1組で2レコードを追加する
 	"""
 	serializer_class = FriendSerializer
 	queryset = Friend.objects.all()
+	pagination_class = FriendPagination
 
 	def get_queryset(self):
-		return self.queryset.filter(
-			Q(src_user=self.request.user) | Q(dest_user=self.request.user)
-		)
+		return self.queryset.filter(src_user=self.request.user)
 
 	def perform_create(self, serializer):
 		try:
@@ -174,6 +185,7 @@ class FriendDetailViewSet(viewsets.ReadOnlyModelViewSet):
 	"""
 	serializer_class = UserDetailSerializer
 	queryset = UserDetail.objects.all()
+	pagination_class = None
 
 	def get_queryset(self):
 		friend = Friend.objects.filter(
@@ -193,6 +205,7 @@ class FriendRequestViewSet(viewsets.ModelViewSet):
 	"""
 	serializer_class = FriendRequestSerializer
 	queryset = FriendRequest.objects.all()
+	pagination_class = FriendPagination
 
 	def get_queryset(self):
 		return self.queryset.filter(
@@ -222,7 +235,43 @@ class FriendRequestViewSet(viewsets.ModelViewSet):
 			if dest_user != self.request.user:
 				raise ValidationError('申請されたリクエストのみ承認または拒否できます')
 
-		serializer.save()
+		try:
+			friend_request = serializer.save()
+		except BaseException:
+			raise ValidationError('エラーが発生しました')
+
+		src_user = friend_request.src_user
+		dest_user = friend_request.dest_user
+
+		# 承認
+		if friend_request.status_type == 2:
+			friend = Friend.objects.all()
+
+			# フレンドは1組で2レコードとする
+			if not friend.filter(Q(src_user=src_user) & Q(dest_user=dest_user)).exists():
+				friend.create(
+					src_user=src_user,
+					dest_user=dest_user,
+					friend_request=friend_request
+				)
+
+			if not friend.filter(Q(src_user=dest_user) & Q(dest_user=src_user)).exists():
+				friend.create(
+					src_user=dest_user,
+					dest_user=src_user,
+					friend_request=friend_request
+				)
+
+		# ブロック
+		if friend_request.status_type == 4:
+			blocking = BlockingFriend.objects.all()
+			if not blocking.filter(
+					Q(src_user=dest_user) & Q(dest_user=src_user)
+			).exists():
+				blocking.create(
+					src_user=friend_request.dest_user,
+					dest_user=friend_request.src_user
+				)
 
 
 class BlockingFriendViewSet(viewsets.ModelViewSet):
@@ -231,15 +280,49 @@ class BlockingFriendViewSet(viewsets.ModelViewSet):
 	"""
 	serializer_class = BlockingFriendSerializer
 	queryset = BlockingFriend.objects.all()
+	pagination_class = FriendPagination
 
 	def get_queryset(self):
 		return self.queryset.filter(src_user=self.request.user)
 
 	def perform_create(self, serializer):
 		try:
-			serializer.save(src_user=self.request.user)
+			blocking = serializer.save(src_user=self.request.user)
 		except BaseException:
 			raise ValidationError('すでにブロック済みです')
+
+		# フレンドを削除
+		friend_src = Friend.objects.filter(
+			Q(src_user=blocking.src_user) & Q(dest_user=blocking.dest_user)
+		).first()
+		if friend_src is not None:
+			friend_src.delete()
+
+		friend_dest = Friend.objects.filter(
+			Q(src_user=blocking.dest_user) & Q(dest_user=blocking.src_user)
+		).first()
+		if friend_dest is not None:
+			friend_dest.delete()
+
+
+class BlockingFriendDetailViewSet(viewsets.ReadOnlyModelViewSet):
+	"""
+	ブロックフレンド詳細 ReadOnlyModelViewSet
+	"""
+	serializer_class = UserSerializer
+	queryset = User.objects.all()
+	pagination_class = None
+
+	def get_queryset(self):
+		blocking = BlockingFriend.objects.filter(
+			Q(id=self.kwargs.get('blocking_friend_id'))
+			&
+			Q(src_user=self.request.user)
+		).first()
+
+		if blocking is None:
+			return None
+		return self.queryset.filter(id=blocking.dest_user_id)
 
 
 class PartyViewSet(viewsets.ModelViewSet):
@@ -248,6 +331,7 @@ class PartyViewSet(viewsets.ModelViewSet):
 	"""
 	serializer_class = PartySerializer
 	queryset = Party.objects.all()
+	pagination_class = PartyPagination
 
 	def get_queryset(self):
 		return self.queryset.filter(user=self.request.user)
@@ -262,6 +346,7 @@ class PartyMemberViewSet(viewsets.ModelViewSet):
 	"""
 	serializer_class = PartyMemberSerializer
 	queryset = PartyMember.objects.all()
+	pagination_class = PartyPagination
 
 	def get_queryset(self):
 		return self.queryset.filter(party_id_id=self.kwargs.get('party_id'))
@@ -279,6 +364,7 @@ class PartyMemberDetailViewSet(viewsets.ReadOnlyModelViewSet):
 	"""
 	serializer_class = UserDetailSerializer
 	queryset = UserDetail.objects.all()
+	pagination_class = None
 
 	def get_queryset(self):
 		party_member = PartyMember.objects.filter(

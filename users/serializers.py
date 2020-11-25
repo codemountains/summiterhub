@@ -128,7 +128,8 @@ class FriendRequestSerializer(serializers.ModelSerializer):
 			'status_type_name'
 		]
 		extra_kwargs = {
-			'src_user': {'read_only': True}
+			'src_user': {'read_only': True},
+			'dest_user': {'read_only': True}
 		}
 
 

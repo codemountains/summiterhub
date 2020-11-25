@@ -3,6 +3,7 @@ from rest_framework import viewsets
 from rest_framework.exceptions import ValidationError
 from .serializers import GearSerializer, CustomGearSerializer
 from .models import Gear, CustomGear
+from .paginations import GearPagination
 
 
 class GearViewSet(viewsets.ModelViewSet):
@@ -11,6 +12,7 @@ class GearViewSet(viewsets.ModelViewSet):
 	"""
 	serializer_class = GearSerializer
 	queryset = Gear.objects.all()
+	pagination_class = GearPagination
 
 	# 自分の装備のみが操作対象
 	def get_queryset(self):
@@ -26,6 +28,7 @@ class CustomGearViewSet(viewsets.ModelViewSet):
 	"""
 	serializer_class = CustomGearSerializer
 	queryset = CustomGear.objects.all()
+	pagination_class = None
 
 	# 自分の装備のみが操作対象
 	def get_queryset(self):
@@ -36,7 +39,10 @@ class CustomGearViewSet(viewsets.ModelViewSet):
 		)
 
 	def perform_create(self, serializer):
-		gear = self.queryset.filter(gear_id=self.kwargs.get('gear_id')).first()
+		gear = Gear.objects.filter(id=self.kwargs.get('gear_id')).first()
+		if gear is None:
+			raise ValidationError('')
+
 		if gear.user != self.request.user:
 			raise ValidationError('カスタム装備の作成権限がありません')
 

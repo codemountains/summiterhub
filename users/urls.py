@@ -17,6 +17,10 @@ friend_router.register('', views.FriendViewSet)
 friend_detail_router = routers.DefaultRouter()
 friend_detail_router.register('', views.FriendDetailViewSet)
 
+# Blocking friend detail
+blocking_detail_router = routers.DefaultRouter()
+blocking_detail_router.register('', views.BlockingFriendDetailViewSet)
+
 # Parties
 party_router = routers.DefaultRouter()
 party_router.register('', views.PartyViewSet)
@@ -30,7 +34,7 @@ party_member_detail_router = routers.DefaultRouter()
 party_member_detail_router.register('', views.PartyMemberDetailViewSet)
 
 urlpatterns = [
-	path('singup/', views.CreateUserView.as_view(), name='signup'),
+	path('signup/', views.CreateUserView.as_view(), name='signup'),
 	path(
 		'tokens/create/',
 		views.UserTokenCreateView.as_view(),
@@ -45,6 +49,10 @@ urlpatterns = [
 	path(
 		'friends/<uuid:friend_id>/details/',
 		include(friend_detail_router.urls)
+	),
+	path(
+		'friends/blocking/<uuid:blocking_friend_id>/details/',
+		include(blocking_detail_router.urls)
 	),
 	path('parties/', include(party_router.urls)),
 	path(

@@ -12,9 +12,9 @@ plan_router.register('', views.PlanViewSet)
 # Plan details (gear, custom gear, routes, escape routes)
 plan_details_router = routers.DefaultRouter()
 plan_details_router.register('gears', views.PlanGearViewSet)
-plan_details_router.register('customgears', views.PlanCustomGearViewSet)
+plan_details_router.register('customs', views.PlanCustomGearViewSet)
 plan_details_router.register('routes', views.PlanRouteViewSet)
-plan_details_router.register('escaperoutes', views.PlanEscapeRouteViewSet)
+plan_details_router.register('escapes', views.PlanEscapeRouteViewSet)
 plan_details_router.register('members', views.PlanMemberViewSet)
 
 

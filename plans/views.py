@@ -10,6 +10,7 @@ from .serializers import PlanSerializer, PlanGearSerializer, \
 from .models import Plan, PlanGear, PlanCustomGear, PlanRoute, \
 	PlanRouteDetail, PlanEscapeRoute, PlanMember, Bookmark
 from .filters import PlanSearchFilter
+from .paginations import PlanBasePagination
 
 
 class PlanViewSet(viewsets.ModelViewSet):
@@ -19,12 +20,15 @@ class PlanViewSet(viewsets.ModelViewSet):
 	serializer_class = PlanSerializer
 	queryset = Plan.objects.all()
 	filter_class = PlanSearchFilter
+	pagination_class = PlanBasePagination
 
 	def get_queryset(self):
 		param_mountain = self.request.query_params.get('mountain')
 
 		if param_mountain is None:
-			return self.queryset.filter(created_user=self.request.user)
+			return self.queryset.filter(
+				created_user=self.request.user
+			).order_by('-entering_date').order_by('-descending_date')
 
 		return self.queryset.filter(
 			(
@@ -36,7 +40,7 @@ class PlanViewSet(viewsets.ModelViewSet):
 			)
 			&
 			Q(created_user=self.request.user)
-		)
+		).order_by('-entering_date').order_by('-descending_date')
 
 	def perform_create(self, serializer):
 		serializer.save(
@@ -54,6 +58,7 @@ class PlanGearViewSet(viewsets.ModelViewSet):
 	"""
 	serializer_class = PlanGearSerializer
 	queryset = PlanGear.objects.all()
+	pagination_class = None
 
 	def get_queryset(self):
 		return self.queryset.filter(plan_id=self.kwargs.get('plan_id'))
@@ -74,6 +79,7 @@ class PlanCustomGearViewSet(viewsets.ModelViewSet):
 	"""
 	serializer_class = PlanCustomGearSerializer
 	queryset = PlanCustomGear.objects.all()
+	pagination_class = None
 
 	def get_queryset(self):
 		return self.queryset.filter(plan_id=self.kwargs.get('plan_id'))
@@ -94,9 +100,10 @@ class PlanRouteViewSet(viewsets.ModelViewSet):
 	"""
 	serializer_class = PlanRouteSerializer
 	queryset = PlanRoute.objects.all()
+	pagination_class = None
 
 	def get_queryset(self):
-		return self.queryset.filter(plan_id=self.kwargs.get('plan_id'))
+		return self.queryset.filter(plan_id=self.kwargs.get('plan_id')).order_by('plan_date')
 
 	def perform_create(self, serializer):
 		serializer.save(
@@ -114,10 +121,11 @@ class PlanRouteDetailViewSet(viewsets.ModelViewSet):
 	"""
 	serializer_class = PlanRouteDetailSerializer
 	queryset = PlanRouteDetail.objects.all()
+	pagination_class = None
 
 	def get_queryset(self):
 		return self.queryset.filter(
-			plan_route_id=self.kwargs.get('plan_route_id'))
+			plan_route_id=self.kwargs.get('plan_route_id')).order_by('sort_index')
 
 	def perform_create(self, serializer):
 		serializer.save(
@@ -135,6 +143,7 @@ class PlanEscapeRouteViewSet(viewsets.ModelViewSet):
 	"""
 	serializer_class = PlanEscapeRouteSerializer
 	queryset = PlanEscapeRoute.objects.all()
+	pagination_class = None
 
 	def get_queryset(self):
 		return self.queryset.filter(plan_id=self.kwargs.get('plan_id'))
@@ -155,9 +164,10 @@ class PlanMemberViewSet(viewsets.ModelViewSet):
 	"""
 	serializer_class = PlanMemberSerializer
 	queryset = PlanMember.objects.all()
+	pagination_class = None
 
 	def get_queryset(self):
-		return self.queryset.filter(plan_id=self.kwargs.get('plan_id'))
+		return self.queryset.filter(plan_id=self.kwargs.get('plan_id')).order_by('sort_index')
 
 	def perform_create(self, serializer):
 		serializer.save(
@@ -175,6 +185,7 @@ class BookmarkViewSet(viewsets.ModelViewSet):
 	"""
 	serializer_class = BookmarkSerializer
 	queryset = Bookmark.objects.all()
+	pagination_class = PlanBasePagination
 
 	def get_queryset(self):
 		return self.queryset.filter(user=self.request.user)
@@ -203,12 +214,13 @@ class PlanSearchViewSet(viewsets.ReadOnlyModelViewSet):
 	queryset = Plan.objects.all()
 	permission_classes = (AllowAny,)
 	filter_class = PlanSearchFilter
+	pagination_class = PlanBasePagination
 
 	def get_queryset(self):
 		param_mountain = self.request.query_params.get('mountain')
 
 		if param_mountain is None:
-			return self.queryset.filter(is_submitted=True)
+			return self.queryset.filter(is_submitted=True).order_by('-updated_at')
 
 		return self.queryset.filter(
 			(
@@ -220,4 +232,4 @@ class PlanSearchViewSet(viewsets.ReadOnlyModelViewSet):
 			)
 			&
 			Q(is_submitted=True)
-		)
+		).order_by('-entering_date')
