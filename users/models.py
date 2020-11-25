@@ -97,8 +97,10 @@ class UserDetail(models.Model):
 	created_at = models.DateTimeField(auto_now_add=True)
 	updated_at = models.DateTimeField(auto_now=True)
 	profile_name = models.CharField(max_length=100)
-	profile_image = models.ImageField(blank=True, null=True,
-									  upload_to=upload_path)
+	profile_image = models.ImageField(
+		blank=True, null=True,
+		upload_to=upload_path
+	)
 	name = models.CharField(max_length=100)
 	postal_code = models.CharField(max_length=8)
 	prefecture = models.IntegerField(choices=PREFECTURE)
@@ -157,7 +159,7 @@ class FriendRequest(models.Model):
 		status_type_name = str(
 			choices.FRIEND_STATUS_TYPE[self.status_type - 1][1])
 		return 'Src: ' + src_user + ' Dest email: ' + dest_email + \
-			   ' Status: ' + status_type_name
+			' Status: ' + status_type_name
 
 
 class Friend(models.Model):

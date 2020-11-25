@@ -10,6 +10,10 @@ class PlanSearchFilter(filters.FilterSet):
 		choices=Plan.PURPOSE_TYPE,
 		lookup_expr='exact'
 	)
+	prefecture = filters.ChoiceFilter(
+		choices=Plan.PREFECTURE,
+		lookup_expr='exact'
+	)
 	mountain_first = filters.CharFilter(lookup_expr='contains')
 	mountain_second = filters.CharFilter(lookup_expr='contains')
 	mountain_third = filters.CharFilter(lookup_expr='contains')
@@ -28,6 +32,7 @@ class PlanSearchFilter(filters.FilterSet):
 		model = Plan
 		fields = [
 			'purpose_type',
+			'prefecture',
 			'mountain_first',
 			'mountain_second',
 			'mountain_third',

@@ -14,5 +14,5 @@ custom_gear_router.register('', views.CustomGearViewSet)
 
 urlpatterns = [
 	path('', include(gear_router.urls)),
-	path('<uuid:gear_id>/customgears/', include(custom_gear_router.urls)),
+	path('<uuid:gear_id>/customs/', include(custom_gear_router.urls)),
 ]

@@ -99,7 +99,8 @@ class PlanGearSerializer(serializers.ModelSerializer):
 			'has_snow_saw',
 			'has_riding_gear',
 			'riding_type',
-			'riding_type_name'
+			'riding_type_name',
+			'gear'
 		]
 		extra_kwargs = {
 			'created_user': {'read_only': True},
@@ -252,6 +253,7 @@ class PlanMemberSerializer(serializers.ModelSerializer):
 			'insurance_name',
 			'insurance_number',
 			'hitococo_id',
+			'sort_index'
 		]
 		extra_kwargs = {
 			'created_user': {'read_only': True},
@@ -306,6 +308,11 @@ class PlanSearchSerializer(serializers.ModelSerializer):
 			'mountain_third',
 			'mountain_fourth',
 			'mountain_fifth',
+			'submitted_date',
 			'entering_date',
-			'descending_date'
+			'descending_date',
+			'has_trail_snacks',
+			'water_liters',
+			'food_times',
+			'emergency_food_times'
 		]

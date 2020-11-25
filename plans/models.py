@@ -1,4 +1,7 @@
 from django.db import models
+from django.core import validators
+
+from gears.models import Gear
 from summiterhub import settings_core
 import uuid
 from utils import choices
@@ -42,9 +45,29 @@ class Plan(models.Model):
 	affiliate_group_name = models.CharField(max_length=100, blank=True, null=True)
 	affiliate_group_phone = models.CharField(max_length=13, blank=True, null=True)
 	has_trail_snacks = models.BooleanField(default=True)
-	water_liters = models.IntegerField()
-	food_times = models.IntegerField()
-	emergency_food_times = models.IntegerField()
+	water_liters = models.DecimalField(
+		max_digits=3,
+		decimal_places=1,
+		validators=[
+			validators.MinValueValidator(0)
+		]
+	)
+	food_times = models.IntegerField(
+		blank=True,
+		null=True,
+		validators=[
+			validators.MinValueValidator(0),
+			validators.MaxValueValidator(99)
+		]
+	)
+	emergency_food_times = models.IntegerField(
+		blank=True,
+		null=True,
+		validators=[
+			validators.MinValueValidator(0),
+			validators.MaxValueValidator(99)
+		]
+	)
 
 	def __str__(self):
 		return 'User: ' + str(self.created_user) + \
@@ -107,6 +130,13 @@ class PlanGear(models.Model):
 	has_snow_saw = models.BooleanField(default=False)
 	has_riding_gear = models.BooleanField(default=False)
 	riding_type = models.IntegerField(choices=RIDING_TYPE, blank=True, null=True)
+	gear = models.ForeignKey(
+		Gear,
+		related_name='plan_gear_gear',
+		on_delete=models.SET_NULL,
+		null=True,
+		blank=True,
+	)
 
 	def __str__(self):
 		return str(self.plan)
@@ -300,6 +330,7 @@ class PlanMember(models.Model):
 	insurance_name = models.CharField(max_length=100, blank=True, null=True)
 	insurance_number = models.CharField(max_length=100, blank=True, null=True)
 	hitococo_id = models.CharField(max_length=50, blank=True, null=True)
+	sort_index = models.IntegerField(null=True)
 
 	def __str__(self):
 		return str(self.plan) + ' Name: ' + str(self.name)
