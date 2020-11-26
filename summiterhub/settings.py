@@ -16,7 +16,7 @@ SECRET_KEY = env('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = env('DEBUG')
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = env.list('ALLOWED_HOSTS')
 
 # CORS_ORIGIN_WHITELIST
 
@@ -51,16 +51,20 @@ LOGGING = {
 		# Dairyが利用するロガー
 		'Diary': {
 			'handlers': ['console'],
-			'level': 'DEBUG',
+			'level': 'INFO',
 		}
 	},
 
 	# ハンドラの設定
 	'handlers': {
 		'console': {
-			'level': 'DEBUG',
-			'class': 'logging.StreamHandler',
-			'formatter': 'dev'
+			'level': 'INFO',
+			'class': 'logging.TimedRotatingFileHandler',
+			'filename': os.path.join(BASE_DIR, 'logs/django.log'),
+			'formatter': 'prod',
+			'when': 'D',
+			'interval': 1,
+			'backupCount': 7,
 		},
 	},
 
